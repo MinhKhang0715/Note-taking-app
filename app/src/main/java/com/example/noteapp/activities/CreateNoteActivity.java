@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.noteapp.R;
 import com.example.noteapp.database.NoteDatabase;
 import com.example.noteapp.entities.Note;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -40,6 +42,8 @@ public class CreateNoteActivity extends AppCompatActivity {
                 new SimpleDateFormat("EEEE, dd MMMM yyyy HH:mm a", Locale.getDefault())
                         .format(new Date())
         );
+
+        showColorPicker();
     }
 
     @Override
@@ -73,6 +77,16 @@ public class CreateNoteActivity extends AppCompatActivity {
                 setResult(RESULT_OK, intent);
                 finish();
             });
+        });
+    }
+
+    private void showColorPicker() {
+        LinearLayout colorPicker = findViewById(R.id.color_picker);
+        BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(colorPicker);
+        colorPicker.findViewById(R.id.textColorPicker).setOnClickListener(view -> {
+            if (bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED)
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            else bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         });
     }
 

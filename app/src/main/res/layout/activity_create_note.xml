@@ -124,6 +124,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
         
     </ScrollView>
-    
+
+    <include layout="@layout/color_picker"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

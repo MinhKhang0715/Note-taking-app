@@ -4,4 +4,6 @@
     <string name="note_title">Note title</string>
     <string name="note_subtitle">Note subtitle</string>
     <string name="type_your_note">Type your note...</string>
+    <string name="color_picker">Color Picker</string>
+    <string name="pick_color">Pick color</string>
 </resources>
