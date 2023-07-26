@@ -11,7 +11,7 @@
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="My Notes!"
+        android:text="My Notes"
         android:textColor="@color/white"
         android:textSize="@dimen/_20sdp"
         android:layout_marginStart="@dimen/_12sdp"
@@ -102,13 +102,6 @@
             android:contentDescription="@string/app_name"
             android:layout_marginStart="@dimen/_15sdp"
             android:src="@drawable/ic_language_24"
-            app:tint="@color/icon"/>
-
-        <ImageView
-            android:layout_width="@dimen/_23sdp"
-            android:layout_height="@dimen/_23sdp"
-            android:contentDescription="@string/app_name"
-            android:src="@drawable/ic_add_circle_outline_24"
             app:tint="@color/icon"/>
 
     </LinearLayout>
