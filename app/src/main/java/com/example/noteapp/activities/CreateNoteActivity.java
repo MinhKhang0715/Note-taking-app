@@ -13,6 +13,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -82,13 +86,31 @@ public class CreateNoteActivity extends AppCompatActivity {
         noteColor = findViewById(R.id.viewSubtitle);
         noteImage = findViewById(R.id.noteImage);
         dateTime = findViewById(R.id.textDateTime);
+        selectedNoteColor = "#333333"; // default color
 
         dateTime.setText(
                 new SimpleDateFormat("EEEE, dd MMMM yyyy HH:mm a", Locale.getDefault())
                         .format(new Date())
         );
 
-        selectedNoteColor = "#333333"; // default color
+        noteContent.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                noteContent.setAutoLinkMask(Linkify.WEB_URLS | Linkify.EMAIL_ADDRESSES);
+                noteContent.setMovementMethod(LinkMovementMethod.getInstance());
+                Linkify.addLinks(noteContent, Linkify.WEB_URLS | Linkify.EMAIL_ADDRESSES);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
 
         initAndShowColorPicker();
         setNoteColor();
