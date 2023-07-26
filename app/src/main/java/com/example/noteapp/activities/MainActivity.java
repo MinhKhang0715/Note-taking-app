@@ -44,10 +44,7 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
 
-        addNoteBtn.setOnClickListener(view -> {
-            createNoteActivity.launch(new Intent(getApplicationContext(), CreateNoteActivity.class));
-//            startActivity(new Intent(getApplicationContext(), CreateNoteActivity.class));
-        });
+        addNoteBtn.setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
         notesView = findViewById(R.id.noteRecyclerView);
         notesView.setLayoutManager(
                 new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
