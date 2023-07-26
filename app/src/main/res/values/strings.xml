@@ -6,4 +6,5 @@
     <string name="type_your_note">Type your note...</string>
     <string name="color_picker">Color Picker</string>
     <string name="pick_color">Pick color</string>
+    <string name="add_an_image">Add an image</string>
 </resources>
