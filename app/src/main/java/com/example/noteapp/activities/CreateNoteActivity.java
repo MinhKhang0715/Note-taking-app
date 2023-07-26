@@ -1,11 +1,18 @@
 package com.example.noteapp.activities;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -13,7 +20,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.noteapp.R;
@@ -21,6 +32,7 @@ import com.example.noteapp.database.NoteDatabase;
 import com.example.noteapp.entities.Note;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -32,7 +44,32 @@ public class CreateNoteActivity extends AppCompatActivity {
     private EditText noteTitle, noteSubtitle, noteContent;
     private TextView dateTime;
     private View noteColor;
+    private ImageView noteImage;
     private String selectedNoteColor;
+    private final static int REQUEST_READ_MEDIA_IMAGES = 1;
+    private String selectedImagePath = "";
+
+    private final ActivityResultLauncher<Intent> selectImageActivity = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    Intent intent = result.getData();
+                    if (intent != null) {
+                        Uri selectedImageUri = intent.getData();
+                        if (selectedImageUri != null) {
+                            try (InputStream inputStream = getContentResolver().openInputStream(selectedImageUri)) {
+                                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                                noteImage.setImageBitmap(bitmap);
+                                noteImage.setVisibility(View.VISIBLE);
+                                selectedImagePath = getPathFromUri(selectedImageUri);
+                            } catch (Exception e) {
+                                showToast(e.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +80,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         noteSubtitle = findViewById(R.id.noteSubtitle);
         noteContent = findViewById(R.id.noteContent);
         noteColor = findViewById(R.id.viewSubtitle);
+        noteImage = findViewById(R.id.noteImage);
         dateTime = findViewById(R.id.textDateTime);
 
         dateTime.setText(
@@ -52,7 +90,7 @@ public class CreateNoteActivity extends AppCompatActivity {
 
         selectedNoteColor = "#333333"; // default color
 
-        showColorPicker();
+        initAndShowColorPicker();
         setNoteColor();
     }
 
@@ -78,6 +116,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         note.setNoteContent(noteContent.getText().toString());
         note.setDateTime(dateTime.getText().toString());
         note.setColor(selectedNoteColor);
+        note.setImagePath(selectedImagePath);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
@@ -91,7 +130,8 @@ public class CreateNoteActivity extends AppCompatActivity {
         });
     }
 
-    private void showColorPicker() {
+    //    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private void initAndShowColorPicker() {
         LinearLayout colorPicker = findViewById(R.id.color_picker);
         BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(colorPicker);
         colorPicker.findViewById(R.id.textColorPicker).setOnClickListener(view -> {
@@ -100,6 +140,27 @@ public class CreateNoteActivity extends AppCompatActivity {
             else bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         });
 
+        configColorPicker(colorPicker);
+        colorPicker.findViewById(R.id.layoutAddImage).setOnClickListener(view -> {
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            if (ContextCompat.checkSelfPermission(
+                    getApplicationContext(),
+                    Manifest.permission.READ_MEDIA_IMAGES
+            ) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        CreateNoteActivity.this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        REQUEST_READ_MEDIA_IMAGES
+                );
+            } else selectImage();
+        });
+    }
+
+    private void selectImage() {
+        selectImageActivity.launch(new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI));
+    }
+
+    private void configColorPicker(LinearLayout layout) {
         final int[] colors = {
                 ContextCompat.getColor(getApplicationContext(), R.color.defaultTextColor),
                 ContextCompat.getColor(getApplicationContext(), R.color.note2),
@@ -109,11 +170,11 @@ public class CreateNoteActivity extends AppCompatActivity {
         };
 
         final ImageView[] colorViews = {
-                colorPicker.findViewById(R.id.imgColor1),
-                colorPicker.findViewById(R.id.imgColor2),
-                colorPicker.findViewById(R.id.imgColor3),
-                colorPicker.findViewById(R.id.imgColor4),
-                colorPicker.findViewById(R.id.imgColor5)
+                layout.findViewById(R.id.imgColor1),
+                layout.findViewById(R.id.imgColor2),
+                layout.findViewById(R.id.imgColor3),
+                layout.findViewById(R.id.imgColor4),
+                layout.findViewById(R.id.imgColor5)
         };
 
         for (int i = 0; i < colorViews.length; i++) {
@@ -135,5 +196,29 @@ public class CreateNoteActivity extends AppCompatActivity {
 
     private void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_READ_MEDIA_IMAGES && grantResults.length > 0) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                selectImage();
+            else showToast("Permission denied");
+        }
+    }
+
+    private String getPathFromUri(Uri imgUri) {
+        String path;
+        Cursor cursor = getContentResolver().query(imgUri, null, null, null, null);
+        if (cursor == null)
+            return imgUri.getPath();
+        else {
+            cursor.moveToFirst();
+            int index = cursor.getColumnIndex("_data");
+            path = cursor.getString(index);
+            cursor.close();
+            return path;
+        }
     }
 }
