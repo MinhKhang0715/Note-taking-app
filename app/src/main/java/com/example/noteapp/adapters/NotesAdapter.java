@@ -21,7 +21,7 @@ import java.util.List;
 
 public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHolder> {
     private final List<Note> listOfNotes;
-    private NoteListener noteListener;
+    private final NoteListener noteListener;
 
     public NotesAdapter(List<Note> listOfNotes, NoteListener noteListener) {
         this.listOfNotes = listOfNotes;
@@ -43,9 +43,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
         holder.setNote(listOfNotes.get(position));
-        holder.noteContainer.setOnClickListener(view -> {
-            noteListener.onNoteClicked(listOfNotes.get(position), position);
-        });
+        holder.noteContainer.setOnClickListener(view -> noteListener.onNoteClicked(listOfNotes.get(position), position));
     }
 
     @Override

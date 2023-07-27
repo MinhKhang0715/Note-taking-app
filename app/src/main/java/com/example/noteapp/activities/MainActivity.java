@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.widget.ImageView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -27,6 +26,9 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity implements NoteListener {
     //    private final static int REQUEST_CODE_ADD_NOTE = 1;
+    private final static int ACTION_ADD_NOTE = 1;
+    private final static int ACTION_VIEW_NOTES = 2;
+    private final static int ACTION_UPDATE_NOTE = 3;
     private RecyclerView notesView;
     private List<Note> noteList;
     private NotesAdapter notesAdapter;
@@ -36,23 +38,15 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK)
-                    getNotes();
+                    getNotes(ACTION_ADD_NOTE);
             }
     );
 
     private final ActivityResultLauncher<Intent> viewOrUpdateNoteActivity = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                Handler handler = new Handler(Looper.getMainLooper());
-                executor.execute(() -> {
-                    List<Note> notes = NoteDatabase.getInstance(getApplicationContext()).noteDAO().getAllNotes();
-                    handler.post(() -> {
-                        noteList.remove(noteClickedPosition);
-                        noteList.add(noteClickedPosition, notes.get(noteClickedPosition));
-                        notesAdapter.notifyItemChanged(noteClickedPosition);
-                    });
-                });
+                if (result.getResultCode() == RESULT_OK)
+                    getNotes(ACTION_UPDATE_NOTE);
             }
     );
 
@@ -70,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         noteList = new ArrayList<>();
         notesAdapter = new NotesAdapter(noteList, this);
         notesView.setAdapter(notesAdapter);
-        getNotes();
+        getNotes(ACTION_VIEW_NOTES);
     }
 
     @Override
@@ -84,21 +78,26 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    private void getNotes() {
+    private void getNotes(int actionCode) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
         executor.execute(() -> {
             List<Note> notes = NoteDatabase.getInstance(getApplicationContext()).noteDAO().getAllNotes();
             handler.post(() -> {
-                if (noteList.size() == 0) {
+                if (actionCode == ACTION_VIEW_NOTES) {
                     noteList.addAll(notes);
                     notesAdapter.notifyDataSetChanged();
-                } else {
+                } else if (actionCode == ACTION_ADD_NOTE) {
                     noteList.add(0, notes.get(0));
                     notesAdapter.notifyItemInserted(0);
+                    notesView.smoothScrollToPosition(0);
                 }
-                notesView.smoothScrollToPosition(0);
-                Log.d("MY_NOTES", notes.toString());
+                else if (actionCode == ACTION_UPDATE_NOTE) {
+                    noteList.remove(noteClickedPosition);
+                    noteList.add(noteClickedPosition, notes.get(noteClickedPosition));
+                    notesAdapter.notifyItemChanged(noteClickedPosition);
+                }
+//                Log.d("MY_NOTES", notes.toString());
             });
         });
     }

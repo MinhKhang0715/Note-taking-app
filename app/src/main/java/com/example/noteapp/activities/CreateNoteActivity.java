@@ -118,7 +118,7 @@ public class CreateNoteActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {}
         });
 
-        if (getIntent().getBooleanExtra("isViewOrUpdate", true)) {
+        if (getIntent().getBooleanExtra("isViewOrUpdate", false)) {
             fromMainActivityNote = (Note) getIntent().getSerializableExtra("note");
             setViewOrUpdateNote();
         }
