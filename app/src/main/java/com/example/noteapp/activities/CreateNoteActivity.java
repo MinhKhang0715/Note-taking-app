@@ -73,6 +73,7 @@ public class CreateNoteActivity extends AppCompatActivity {
                                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                                 noteImage.setImageBitmap(bitmap);
                                 noteImage.setVisibility(View.VISIBLE);
+                                findViewById(R.id.removeImage).setVisibility(View.VISIBLE);
                                 selectedImagePath = getPathFromUri(selectedImageUri);
                             } catch (Exception e) {
                                 showToast(e.getMessage());
@@ -98,10 +99,27 @@ public class CreateNoteActivity extends AppCompatActivity {
         mainURL = findViewById(R.id.mainURL);
         selectedNoteColor = "#333333"; // default color
 
-        dateTime.setText(
-                new SimpleDateFormat("EEEE, dd MMMM yyyy HH:mm a", Locale.getDefault())
-                        .format(new Date())
-        );
+        if (getIntent().getBooleanExtra("isViewOrUpdate", false)) {
+            fromMainActivityNote = (Note) getIntent().getSerializableExtra("note");
+            setViewOrUpdateNote();
+        } else {
+            dateTime.setText(
+                    new SimpleDateFormat("EEEE, dd MMMM yyyy HH:mm a", Locale.getDefault())
+                            .format(new Date())
+            );
+        }
+
+        findViewById(R.id.removeImage).setOnClickListener(view -> {
+            noteImage.setImageBitmap(null);
+            noteImage.setVisibility(View.GONE);
+            findViewById(R.id.removeImage).setVisibility(View.GONE);
+            selectedImagePath = "";
+        });
+
+        findViewById(R.id.removeURL).setOnClickListener(view -> {
+            mainURL.setText(null);
+            layoutURL.setVisibility(View.GONE);
+        });
 
         noteContent.addTextChangedListener(new TextWatcher() {
             @Override
@@ -117,11 +135,6 @@ public class CreateNoteActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable editable) {}
         });
-
-        if (getIntent().getBooleanExtra("isViewOrUpdate", false)) {
-            fromMainActivityNote = (Note) getIntent().getSerializableExtra("note");
-            setViewOrUpdateNote();
-        }
 
         initAndShowColorPicker();
         setNoteColor();
@@ -142,6 +155,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         if (fromMainActivityNote.getImagePath() != null && !fromMainActivityNote.getImagePath().trim().isEmpty()) {
             noteImage.setImageBitmap(BitmapFactory.decodeFile(fromMainActivityNote.getImagePath()));
             noteImage.setVisibility(View.VISIBLE);
+            findViewById(R.id.removeImage).setVisibility(View.VISIBLE);
             selectedImagePath = fromMainActivityNote.getImagePath();
         }
         if (fromMainActivityNote.getWebLink() != null && !fromMainActivityNote.getWebLink().trim().isEmpty()) {

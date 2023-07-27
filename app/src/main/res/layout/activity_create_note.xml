@@ -109,8 +109,23 @@
                 android:layout_marginTop="@dimen/_15sdp"
                 android:layout_marginEnd="@dimen/_12sdp"
                 android:adjustViewBounds="true"
+                android:visibility="gone"
                 android:contentDescription="@string/app_name"
                 app:layout_constraintTop_toBottomOf="@id/noteSubtitle"/>
+
+            <ImageView
+                android:id="@+id/removeImage"
+                android:layout_width="@dimen/_25sdp"
+                android:layout_height="@dimen/_25sdp"
+                android:src="@drawable/ic_delete_24"
+                app:tint="@color/white"
+                android:background="@drawable/background_delete_icon"
+                android:contentDescription="@string/app_name"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:layout_marginEnd="@dimen/_10sdp"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="@id/noteImage"
+                app:layout_constraintEnd_toEndOf="@id/noteImage"/>
             
             <LinearLayout
                 android:id="@+id/layoutURL"
@@ -122,7 +137,8 @@
                 android:layout_marginEnd="@dimen/_12sdp"
                 android:layout_marginTop="@dimen/_15sdp"
                 android:visibility="gone"
-                app:layout_constraintTop_toBottomOf="@+id/noteImage">
+                app:layout_constraintTop_toBottomOf="@+id/noteImage"
+                tools:ignore="UseCompoundDrawables">
                 <TextView
                     android:id="@+id/mainURL"
                     android:layout_width="0dp"
@@ -132,6 +148,13 @@
                     android:includeFontPadding="false"
                     android:textSize="@dimen/_13ssp"
                     android:textColorLink="@color/colorAccent"/>
+                <ImageView
+                    android:id="@+id/removeURL"
+                    android:layout_width="@dimen/_20sdp"
+                    android:layout_height="@dimen/_20sdp"
+                    android:src="@drawable/ic_delete_24"
+                    android:contentDescription="@string/app_name"
+                    app:tint="@color/delete"/>
 
             </LinearLayout>
             
