@@ -3,9 +3,9 @@
     <string name="search_notes">Search notes</string>
     <string name="note_title">Note title</string>
     <string name="note_subtitle">Note subtitle</string>
-    <string name="type_your_note">Type your note...</string>
-    <string name="color_picker">Color Picker</string>
-    <string name="pick_color">Pick color</string>
+    <string name="type_your_note">Type your note…</string>
+    <string name="note_options">Note options</string>
+    <string name="pick_color">Pick a color</string>
     <string name="add_an_image">Add an image</string>
     <string name="add_an_url_for_main_reference">Add an URL for main reference</string>
     <string name="add_url">Add URL</string>

@@ -182,6 +182,6 @@
         
     </ScrollView>
 
-    <include layout="@layout/color_picker"/>
+    <include layout="@layout/note_options"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

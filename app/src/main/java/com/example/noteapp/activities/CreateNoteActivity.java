@@ -136,7 +136,7 @@ public class CreateNoteActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {}
         });
 
-        initAndShowColorPicker();
+        initAndShowNoteOptions();
         setNoteColor();
     }
 
@@ -200,37 +200,37 @@ public class CreateNoteActivity extends AppCompatActivity {
     }
 
     //    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
-    private void initAndShowColorPicker() {
-        LinearLayout colorPicker = findViewById(R.id.color_picker);
-        BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(colorPicker);
-        colorPicker.findViewById(R.id.textColorPicker).setOnClickListener(view -> {
+    private void initAndShowNoteOptions() {
+        LinearLayout noteOptions = findViewById(R.id.noteOptions);
+        BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(noteOptions);
+        noteOptions.findViewById(R.id.textColorPicker).setOnClickListener(view -> {
             if (bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED)
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             else bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         });
 
-        configColorPicker(colorPicker);
+        configLayoutNoteOptions(noteOptions);
 
         if (fromMainActivityNote != null &&
                 fromMainActivityNote.getColor() != null &&
                 !fromMainActivityNote.getColor().trim().isEmpty()) {
             switch (fromMainActivityNote.getColor()) {
                 case "#FDBE3B":
-                    colorPicker.findViewById(R.id.imgColor2).performClick();
+                    noteOptions.findViewById(R.id.imgColor2).performClick();
                     break;
                 case "#FF4842":
-                    colorPicker.findViewById(R.id.imgColor3).performClick();
+                    noteOptions.findViewById(R.id.imgColor3).performClick();
                     break;
                 case "#3A52FC":
-                    colorPicker.findViewById(R.id.imgColor4).performClick();
+                    noteOptions.findViewById(R.id.imgColor4).performClick();
                     break;
                 case "000000":
-                    colorPicker.findViewById(R.id.imgColor5).performClick();
+                    noteOptions.findViewById(R.id.imgColor5).performClick();
                     break;
             }
         }
 
-        colorPicker.findViewById(R.id.layoutAddImage).setOnClickListener(view -> {
+        noteOptions.findViewById(R.id.layoutAddImage).setOnClickListener(view -> {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             if (ContextCompat.checkSelfPermission(
                     getApplicationContext(),
@@ -244,7 +244,7 @@ public class CreateNoteActivity extends AppCompatActivity {
             } else selectImage();
         });
 
-        colorPicker.findViewById(R.id.layoutAddURL).setOnClickListener(view -> {
+        noteOptions.findViewById(R.id.layoutAddURL).setOnClickListener(view -> {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             showAddURLDialog();
         });
@@ -254,7 +254,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         selectImageActivity.launch(new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI));
     }
 
-    private void configColorPicker(LinearLayout layout) {
+    private void configLayoutNoteOptions(LinearLayout layout) {
         final int[] colors = {
                 ContextCompat.getColor(getApplicationContext(), R.color.defaultTextColor),
                 ContextCompat.getColor(getApplicationContext(), R.color.note2),
