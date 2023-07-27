@@ -7,4 +7,9 @@
     <string name="color_picker">Color Picker</string>
     <string name="pick_color">Pick color</string>
     <string name="add_an_image">Add an image</string>
+    <string name="add_an_url_for_main_reference">Add an URL for main reference</string>
+    <string name="add_url">Add URL</string>
+    <string name="enter_your_url_here">Enter your URL here</string>
+    <string name="add">ADD</string>
+    <string name="cancel">CANCEL</string>
 </resources>

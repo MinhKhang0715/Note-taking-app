@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,7 +18,10 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
+import android.util.Patterns;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -27,6 +31,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -49,6 +54,9 @@ public class CreateNoteActivity extends AppCompatActivity {
     private TextView dateTime;
     private View noteColor;
     private ImageView noteImage;
+    private LinearLayout layoutURL;
+    private TextView mainURL;
+    private AlertDialog addURLDialog;
     private String selectedNoteColor;
     private final static int REQUEST_READ_MEDIA_IMAGES = 1;
     private String selectedImagePath = "";
@@ -86,6 +94,8 @@ public class CreateNoteActivity extends AppCompatActivity {
         noteColor = findViewById(R.id.viewSubtitle);
         noteImage = findViewById(R.id.noteImage);
         dateTime = findViewById(R.id.textDateTime);
+        layoutURL = findViewById(R.id.layoutURL);
+        mainURL = findViewById(R.id.mainURL);
         selectedNoteColor = "#333333"; // default color
 
         dateTime.setText(
@@ -140,6 +150,9 @@ public class CreateNoteActivity extends AppCompatActivity {
         note.setColor(selectedNoteColor);
         note.setImagePath(selectedImagePath);
 
+        if (layoutURL.getVisibility() == View.VISIBLE)
+            note.setWebLink(mainURL.getText().toString());
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
         executor.execute(() -> {
@@ -176,6 +189,11 @@ public class CreateNoteActivity extends AppCompatActivity {
                 );
             } else selectImage();
         });
+
+        colorPicker.findViewById(R.id.layoutAddURL).setOnClickListener(view -> {
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            showAddURLDialog();
+        });
     }
 
     private void selectImage() {
@@ -211,13 +229,46 @@ public class CreateNoteActivity extends AppCompatActivity {
         }
     }
 
+    private void showAddURLDialog() {
+        if (addURLDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(CreateNoteActivity.this);
+            View addURLDialogView = LayoutInflater.from(this).inflate(
+                    R.layout.add_url_dialog,
+                    (ViewGroup) findViewById(R.id.addURLDialog)
+            );
+            builder.setView(addURLDialogView);
+            addURLDialog = builder.create();
+
+            if (addURLDialog.getWindow() != null)
+                addURLDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+
+            final EditText inputURL = addURLDialogView.findViewById(R.id.inputURL);
+            inputURL.requestFocus();
+
+            addURLDialogView.findViewById(R.id.btnAdd).setOnClickListener(view -> {
+                String url = inputURL.getText().toString().trim();
+                if (url.isEmpty())
+                    showToast("Enter your URL");
+                else if (!Patterns.WEB_URL.matcher(url).matches())
+                    showToast("Enter a valid URL");
+                else {
+                    mainURL.setText(url);
+                    layoutURL.setVisibility(View.VISIBLE);
+                    addURLDialog.dismiss();
+                }
+            });
+            addURLDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> addURLDialog.dismiss());
+            addURLDialog.show();
+        }
+    }
+
     private void setNoteColor() {
         final GradientDrawable gradientDrawable = (GradientDrawable) noteColor.getBackground();
         gradientDrawable.setColor(Color.parseColor(selectedNoteColor));
     }
 
     private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        Toast.makeText(CreateNoteActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override

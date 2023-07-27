@@ -10,6 +10,7 @@
     <color name="textHint">#7B7B7B</color>
     <color name="icon">#A4A4A4</color>
     <color name="defaultTextColor">#333333</color>
+    <color name="defaultNoteColor">#333333</color>
     <color name="searchBackground">#333333</color>
     <color name="textSubtitle">#CECECE</color>
     <color name="noteSubtitle">#FAFAFA</color>
