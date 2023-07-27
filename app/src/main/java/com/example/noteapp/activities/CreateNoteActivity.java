@@ -21,7 +21,6 @@ import android.text.util.Linkify;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -57,6 +56,7 @@ public class CreateNoteActivity extends AppCompatActivity {
     private LinearLayout layoutURL;
     private TextView mainURL;
     private AlertDialog addURLDialog;
+    private Note fromMainActivityNote;
     private String selectedNoteColor;
     private final static int REQUEST_READ_MEDIA_IMAGES = 1;
     private String selectedImagePath = "";
@@ -105,9 +105,7 @@ public class CreateNoteActivity extends AppCompatActivity {
 
         noteContent.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -117,10 +115,13 @@ public class CreateNoteActivity extends AppCompatActivity {
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
+            public void afterTextChanged(Editable editable) {}
         });
+
+        if (getIntent().getBooleanExtra("isViewOrUpdate", true)) {
+            fromMainActivityNote = (Note) getIntent().getSerializableExtra("note");
+            setViewOrUpdateNote();
+        }
 
         initAndShowColorPicker();
         setNoteColor();
@@ -131,6 +132,22 @@ public class CreateNoteActivity extends AppCompatActivity {
         super.onResume();
         ImageView saveButton = findViewById(R.id.imgSave);
         saveButton.setOnClickListener(view -> saveNote());
+    }
+
+    private void setViewOrUpdateNote() {
+        noteTitle.setText(fromMainActivityNote.getTitle());
+        noteSubtitle.setText(fromMainActivityNote.getSubtitle());
+        noteContent.setText(fromMainActivityNote.getNoteContent());
+        dateTime.setText(fromMainActivityNote.getDateTime());
+        if (fromMainActivityNote.getImagePath() != null && !fromMainActivityNote.getImagePath().trim().isEmpty()) {
+            noteImage.setImageBitmap(BitmapFactory.decodeFile(fromMainActivityNote.getImagePath()));
+            noteImage.setVisibility(View.VISIBLE);
+            selectedImagePath = fromMainActivityNote.getImagePath();
+        }
+        if (fromMainActivityNote.getWebLink() != null && !fromMainActivityNote.getWebLink().trim().isEmpty()) {
+            mainURL.setText(fromMainActivityNote.getWebLink());
+            layoutURL.setVisibility(View.VISIBLE);
+        }
     }
 
     private void saveNote() {
@@ -152,6 +169,9 @@ public class CreateNoteActivity extends AppCompatActivity {
 
         if (layoutURL.getVisibility() == View.VISIBLE)
             note.setWebLink(mainURL.getText().toString());
+
+        if (fromMainActivityNote != null)
+            note.setId(fromMainActivityNote.getId());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
@@ -176,6 +196,26 @@ public class CreateNoteActivity extends AppCompatActivity {
         });
 
         configColorPicker(colorPicker);
+
+        if (fromMainActivityNote != null &&
+                fromMainActivityNote.getColor() != null &&
+                !fromMainActivityNote.getColor().trim().isEmpty()) {
+            switch (fromMainActivityNote.getColor()) {
+                case "#FDBE3B":
+                    colorPicker.findViewById(R.id.imgColor2).performClick();
+                    break;
+                case "#FF4842":
+                    colorPicker.findViewById(R.id.imgColor3).performClick();
+                    break;
+                case "#3A52FC":
+                    colorPicker.findViewById(R.id.imgColor4).performClick();
+                    break;
+                case "000000":
+                    colorPicker.findViewById(R.id.imgColor5).performClick();
+                    break;
+            }
+        }
+
         colorPicker.findViewById(R.id.layoutAddImage).setOnClickListener(view -> {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             if (ContextCompat.checkSelfPermission(
@@ -234,7 +274,7 @@ public class CreateNoteActivity extends AppCompatActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(CreateNoteActivity.this);
             View addURLDialogView = LayoutInflater.from(this).inflate(
                     R.layout.add_url_dialog,
-                    (ViewGroup) findViewById(R.id.addURLDialog)
+                    findViewById(R.id.addURLDialog)
             );
             builder.setView(addURLDialogView);
             addURLDialog = builder.create();
