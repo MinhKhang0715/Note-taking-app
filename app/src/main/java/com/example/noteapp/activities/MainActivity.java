@@ -18,17 +18,43 @@ import com.example.noteapp.R;
 import com.example.noteapp.adapters.NotesAdapter;
 import com.example.noteapp.database.NoteDatabase;
 import com.example.noteapp.entities.Note;
+import com.example.noteapp.listeners.NoteListener;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity {
-//    private final static int REQUEST_CODE_ADD_NOTE = 1;
+public class MainActivity extends AppCompatActivity implements NoteListener {
+    //    private final static int REQUEST_CODE_ADD_NOTE = 1;
     private RecyclerView notesView;
     private List<Note> noteList;
     private NotesAdapter notesAdapter;
+    private int noteClickedPosition;
+
+    private final ActivityResultLauncher<Intent> createNoteActivity = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK)
+                    getNotes();
+            }
+    );
+
+    private final ActivityResultLauncher<Intent> viewOrUpdateNoteActivity = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                Handler handler = new Handler(Looper.getMainLooper());
+                executor.execute(() -> {
+                    List<Note> notes = NoteDatabase.getInstance(getApplicationContext()).noteDAO().getAllNotes();
+                    handler.post(() -> {
+                        noteList.remove(noteClickedPosition);
+                        noteList.add(noteClickedPosition, notes.get(noteClickedPosition));
+                        notesAdapter.notifyItemChanged(noteClickedPosition);
+                    });
+                });
+            }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,23 +62,25 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ImageView addNoteBtn = findViewById(R.id.imgAddNoteMain);
 
-        ActivityResultLauncher<Intent> createNoteActivity = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK)
-                        getNotes();
-                }
-        );
-
         addNoteBtn.setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
         notesView = findViewById(R.id.noteRecyclerView);
         notesView.setLayoutManager(
                 new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         );
         noteList = new ArrayList<>();
-        notesAdapter = new NotesAdapter(noteList);
+        notesAdapter = new NotesAdapter(noteList, this);
         notesView.setAdapter(notesAdapter);
         getNotes();
+    }
+
+    @Override
+    public void onNoteClicked(Note note, int position) {
+        noteClickedPosition = position;
+        viewOrUpdateNoteActivity.launch(
+                new Intent(getApplicationContext(), CreateNoteActivity.class)
+                        .putExtra("isViewOrUpdate", true)
+                        .putExtra("note", note)
+        );
     }
 
     @SuppressLint("NotifyDataSetChanged")
