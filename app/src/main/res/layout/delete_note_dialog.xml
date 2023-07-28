@@ -1,61 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/addURLDialog"
+    android:id="@+id/deleteNoteDialog"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
     android:layout_margin="@dimen/_10sdp"
     android:background="@drawable/background_rectangle"
     android:backgroundTint="@color/defaultBackgroundColor">
-    
+
     <ImageView
-        android:id="@+id/imgAddURL"
+        android:id="@+id/removeIcon"
         android:layout_width="@dimen/_25sdp"
         android:layout_height="@dimen/_25sdp"
         android:layout_marginStart="@dimen/_10sdp"
         android:layout_marginTop="@dimen/_10sdp"
         android:contentDescription="@string/app_name"
-        android:src="@drawable/ic_language_24"
+        android:src="@drawable/ic_delete_24"
         app:tint="@color/white"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/_8sdp"
-        android:layout_marginStart="@dimen/_8sdp"
-        android:includeFontPadding="false"
-        android:text="@string/add_url"
+        android:text="@string/delete_note"
         android:textColor="@color/white"
         android:textSize="@dimen/_14ssp"
-        app:layout_constraintBottom_toBottomOf="@+id/imgAddURL"
+        android:includeFontPadding="false"
+        android:layout_marginStart="@dimen/_8sdp"
+        android:layout_marginEnd="@dimen/_8sdp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imgAddURL"
-        app:layout_constraintTop_toTopOf="@+id/imgAddURL"/>
-    
-    <EditText
-        android:id="@+id/inputURL"
+        app:layout_constraintStart_toEndOf="@+id/removeIcon"
+        app:layout_constraintTop_toTopOf="@+id/removeIcon"
+        app:layout_constraintBottom_toBottomOf="@+id/removeIcon"/>
+
+    <TextView
+        android:id="@+id/message"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/_35sdp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/_8sdp"
         android:layout_marginEnd="@dimen/_8sdp"
         android:layout_marginTop="@dimen/_8sdp"
-        app:layout_constraintTop_toBottomOf="@+id/imgAddURL"
-        android:gravity="center_vertical"
-        android:hint="@string/enter_your_url_here"
-        android:background="@null"
-        android:textColor="@color/white"
-        android:textColorHint="@color/textHint"
-        android:imeOptions="actionDone"
-        android:importantForAutofill="no"
-        android:includeFontPadding="false"
-        android:inputType="textUri"
         android:paddingStart="@dimen/_8sdp"
-        android:paddingEnd="@dimen/_8sdp" />
+        android:paddingEnd="@dimen/_8sdp"
+        app:layout_constraintTop_toBottomOf="@+id/removeIcon"
+        android:text="@string/are_you_sure_you_want_to_delete_this_note"
+        android:textColor="@color/white"
+        android:textSize="@dimen/_13ssp"/>
 
     <Button
-        android:id="@+id/btnAdd"
+        android:id="@+id/btnDelete"
         android:minHeight="0dp"
         android:minWidth="0dp"
         android:layout_width="wrap_content"
@@ -64,11 +59,11 @@
         android:layout_marginBottom="@dimen/_8sdp"
         android:padding="@dimen/_8sdp"
         android:includeFontPadding="false"
-        android:text="@string/add"
+        android:text="@string/delete"
         android:textSize="@dimen/_13ssp"
-        android:textColor="@color/colorAccent"
+        android:textColor="@color/delete"
         android:backgroundTint="@color/defaultBackgroundColor"
-        app:layout_constraintTop_toBottomOf="@+id/inputURL"
+        app:layout_constraintTop_toBottomOf="@+id/message"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
@@ -86,9 +81,9 @@
         android:textSize="@dimen/_13ssp"
         android:textColor="@color/colorAccent"
         android:backgroundTint="@color/defaultBackgroundColor"
-        app:layout_constraintTop_toBottomOf="@+id/inputURL"
-        app:layout_constraintEnd_toStartOf="@+id/btnAdd"
-        app:layout_constraintTop_toTopOf="@+id/btnAdd"
+        app:layout_constraintTop_toBottomOf="@+id/message"
+        app:layout_constraintEnd_toStartOf="@+id/btnDelete"
+        app:layout_constraintTop_toTopOf="@+id/btnDelete"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

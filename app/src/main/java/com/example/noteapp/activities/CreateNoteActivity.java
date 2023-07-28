@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -55,7 +56,7 @@ public class CreateNoteActivity extends AppCompatActivity {
     private ImageView noteImage;
     private LinearLayout layoutURL;
     private TextView mainURL;
-    private AlertDialog addURLDialog;
+    private AlertDialog addURLDialog, deleteNoteDialog;
     private Note fromMainActivityNote;
     private String selectedNoteColor;
     private final static int REQUEST_READ_MEDIA_IMAGES = 1;
@@ -147,6 +148,12 @@ public class CreateNoteActivity extends AppCompatActivity {
         saveButton.setOnClickListener(view -> saveNote());
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (deleteNoteDialog != null ) deleteNoteDialog.dismiss();
+    }
+
     private void setViewOrUpdateNote() {
         noteTitle.setText(fromMainActivityNote.getTitle());
         noteSubtitle.setText(fromMainActivityNote.getSubtitle());
@@ -169,7 +176,7 @@ public class CreateNoteActivity extends AppCompatActivity {
             showToast("Note title can't be empty");
             return;
         } else if (noteSubtitle.getText().toString().trim().isEmpty() && noteContent.getText().toString().trim().isEmpty()) {
-            showToast("Note can't be empty");
+            showToast("Note subtitle can't be empty");
             return;
         }
 
@@ -201,36 +208,36 @@ public class CreateNoteActivity extends AppCompatActivity {
 
     //    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private void initAndShowNoteOptions() {
-        LinearLayout noteOptions = findViewById(R.id.noteOptions);
-        BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(noteOptions);
-        noteOptions.findViewById(R.id.textColorPicker).setOnClickListener(view -> {
+        LinearLayout noteOptionsLayout = findViewById(R.id.noteOptions);
+        BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(noteOptionsLayout);
+        noteOptionsLayout.findViewById(R.id.textColorPicker).setOnClickListener(view -> {
             if (bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED)
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             else bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         });
 
-        configLayoutNoteOptions(noteOptions);
+        configLayoutNoteOptions(noteOptionsLayout);
 
         if (fromMainActivityNote != null &&
                 fromMainActivityNote.getColor() != null &&
                 !fromMainActivityNote.getColor().trim().isEmpty()) {
             switch (fromMainActivityNote.getColor()) {
                 case "#FDBE3B":
-                    noteOptions.findViewById(R.id.imgColor2).performClick();
+                    noteOptionsLayout.findViewById(R.id.imgColor2).performClick();
                     break;
                 case "#FF4842":
-                    noteOptions.findViewById(R.id.imgColor3).performClick();
+                    noteOptionsLayout.findViewById(R.id.imgColor3).performClick();
                     break;
                 case "#3A52FC":
-                    noteOptions.findViewById(R.id.imgColor4).performClick();
+                    noteOptionsLayout.findViewById(R.id.imgColor4).performClick();
                     break;
                 case "000000":
-                    noteOptions.findViewById(R.id.imgColor5).performClick();
+                    noteOptionsLayout.findViewById(R.id.imgColor5).performClick();
                     break;
             }
         }
 
-        noteOptions.findViewById(R.id.layoutAddImage).setOnClickListener(view -> {
+        noteOptionsLayout.findViewById(R.id.layoutAddImage).setOnClickListener(view -> {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             if (ContextCompat.checkSelfPermission(
                     getApplicationContext(),
@@ -244,10 +251,18 @@ public class CreateNoteActivity extends AppCompatActivity {
             } else selectImage();
         });
 
-        noteOptions.findViewById(R.id.layoutAddURL).setOnClickListener(view -> {
+        noteOptionsLayout.findViewById(R.id.layoutAddURL).setOnClickListener(view -> {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             showAddURLDialog();
         });
+
+        if (fromMainActivityNote != null) {
+            noteOptionsLayout.findViewById(R.id.layoutDeleteNote).setVisibility(View.VISIBLE);
+            noteOptionsLayout.findViewById(R.id.layoutDeleteNote).setOnClickListener(view -> {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                showDeleteNoteDialog();
+            });
+        }
     }
 
     private void selectImage() {
@@ -256,7 +271,7 @@ public class CreateNoteActivity extends AppCompatActivity {
 
     private void configLayoutNoteOptions(LinearLayout layout) {
         final int[] colors = {
-                ContextCompat.getColor(getApplicationContext(), R.color.defaultTextColor),
+                ContextCompat.getColor(getApplicationContext(), R.color.defaultBackgroundColor),
                 ContextCompat.getColor(getApplicationContext(), R.color.note2),
                 ContextCompat.getColor(getApplicationContext(), R.color.note3),
                 ContextCompat.getColor(getApplicationContext(), R.color.note4),
@@ -312,8 +327,39 @@ public class CreateNoteActivity extends AppCompatActivity {
                 }
             });
             addURLDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> addURLDialog.dismiss());
-            addURLDialog.show();
         }
+        addURLDialog.show();
+    }
+
+    private void showDeleteNoteDialog() {
+        if (deleteNoteDialog == null) {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(CreateNoteActivity.this);
+            View deleteNoteDialogView = LayoutInflater.from(this).inflate(
+                    R.layout.delete_note_dialog,
+                    findViewById(R.id.deleteNoteDialog)
+            );
+            dialogBuilder.setView(deleteNoteDialogView);
+            deleteNoteDialog = dialogBuilder.create();
+
+            if (deleteNoteDialog.getWindow() != null)
+                deleteNoteDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+
+            deleteNoteDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> deleteNoteDialog.dismiss());
+            deleteNoteDialogView.findViewById(R.id.btnDelete).setOnClickListener(view -> {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                Handler handler = new Handler(Objects.requireNonNull(Looper.myLooper()));
+                executor.execute(() -> {
+                    NoteDatabase.getInstance(getApplicationContext()).noteDAO().deleteNote(fromMainActivityNote);
+                    handler.post(() -> {
+                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        intent.putExtra("isNoteDeleted", true);
+                        setResult(RESULT_OK, intent);
+                        finish();
+                    });
+                });
+            });
+        }
+        deleteNoteDialog.show();
     }
 
     private void setNoteColor() {
