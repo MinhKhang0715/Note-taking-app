@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -147,6 +148,12 @@ public class CreateNoteActivity extends AppCompatActivity {
         saveButton.setOnClickListener(view -> saveNote());
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (deleteNoteDialog != null ) deleteNoteDialog.dismiss();
+    }
+
     private void setViewOrUpdateNote() {
         noteTitle.setText(fromMainActivityNote.getTitle());
         noteSubtitle.setText(fromMainActivityNote.getSubtitle());
@@ -169,7 +176,7 @@ public class CreateNoteActivity extends AppCompatActivity {
             showToast("Note title can't be empty");
             return;
         } else if (noteSubtitle.getText().toString().trim().isEmpty() && noteContent.getText().toString().trim().isEmpty()) {
-            showToast("Note can't be empty");
+            showToast("Note subtitle can't be empty");
             return;
         }
 
@@ -202,8 +209,6 @@ public class CreateNoteActivity extends AppCompatActivity {
     //    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private void initAndShowNoteOptions() {
         LinearLayout noteOptionsLayout = findViewById(R.id.noteOptions);
-        if (fromMainActivityNote != null)
-            noteOptionsLayout.findViewById(R.id.layoutDeleteNote).setVisibility(View.VISIBLE);
         BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(noteOptionsLayout);
         noteOptionsLayout.findViewById(R.id.textColorPicker).setOnClickListener(view -> {
             if (bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED)
@@ -251,10 +256,13 @@ public class CreateNoteActivity extends AppCompatActivity {
             showAddURLDialog();
         });
 
-        noteOptionsLayout.findViewById(R.id.layoutDeleteNote).setOnClickListener(view -> {
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-            showDeleteNoteDialog();
-        });
+        if (fromMainActivityNote != null) {
+            noteOptionsLayout.findViewById(R.id.layoutDeleteNote).setVisibility(View.VISIBLE);
+            noteOptionsLayout.findViewById(R.id.layoutDeleteNote).setOnClickListener(view -> {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                showDeleteNoteDialog();
+            });
+        }
     }
 
     private void selectImage() {
@@ -319,9 +327,8 @@ public class CreateNoteActivity extends AppCompatActivity {
                 }
             });
             addURLDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> addURLDialog.dismiss());
-            addURLDialog.show();
-        } else
-            addURLDialog.show();
+        }
+        addURLDialog.show();
     }
 
     private void showDeleteNoteDialog() {
@@ -338,10 +345,21 @@ public class CreateNoteActivity extends AppCompatActivity {
                 deleteNoteDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
 
             deleteNoteDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> deleteNoteDialog.dismiss());
-            deleteNoteDialogView.findViewById(R.id.btnDelete).setOnClickListener(view -> deleteNoteDialog.dismiss());
-            deleteNoteDialog.show();
-        } else
-            deleteNoteDialog.show();
+            deleteNoteDialogView.findViewById(R.id.btnDelete).setOnClickListener(view -> {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                Handler handler = new Handler(Objects.requireNonNull(Looper.myLooper()));
+                executor.execute(() -> {
+                    NoteDatabase.getInstance(getApplicationContext()).noteDAO().deleteNote(fromMainActivityNote);
+                    handler.post(() -> {
+                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        intent.putExtra("isNoteDeleted", true);
+                        setResult(RESULT_OK, intent);
+                        finish();
+                    });
+                });
+            });
+        }
+        deleteNoteDialog.show();
     }
 
     private void setNoteColor() {
