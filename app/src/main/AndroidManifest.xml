@@ -15,7 +15,7 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NoteApp"
+        android:theme="@style/DarkTheme.NoteApp"
         tools:targetApi="31">
         <activity
             android:name=".activities.CreateNoteActivity"
