@@ -17,17 +17,35 @@ import com.example.noteapp.entities.Note;
 import com.example.noteapp.listeners.NoteListener;
 import com.makeramen.roundedimageview.RoundedImageView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHolder> {
-    private final List<Note> listOfNotes;
+    private List<Note> listOfNotes;
+    private final List<Note>  intermediateListOfNotes;
     private final NoteListener noteListener;
 
     public NotesAdapter(List<Note> listOfNotes, NoteListener noteListener) {
         this.listOfNotes = listOfNotes;
         this.noteListener = noteListener;
+        intermediateListOfNotes = listOfNotes;
     }
 
+    public void setSearch(final String searchKeyword) {
+        if (searchKeyword.trim().isEmpty()) listOfNotes = intermediateListOfNotes;
+        else {
+            List<Note> temp = new ArrayList<>();
+            for (Note note : intermediateListOfNotes) {
+                if (note.getTitle().toLowerCase().contains(searchKeyword.toLowerCase()) ||
+                        note.getSubtitle().toLowerCase().contains(searchKeyword.toLowerCase()) ||
+                        note.getNoteContent().toLowerCase().contains(searchKeyword.toLowerCase()))
+                    temp.add(note);
+            }
+            listOfNotes = temp;
+        }
+//        notifyItemRangeChanged(0, listOfNotes.size());
+        notifyDataSetChanged();
+    }
     @NonNull
     @Override
     public NoteViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
