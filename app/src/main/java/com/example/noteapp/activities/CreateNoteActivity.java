@@ -256,7 +256,7 @@ public class CreateNoteActivity extends AppCompatActivity {
 
     private void configLayoutNoteOptions(LinearLayout layout) {
         final int[] colors = {
-                ContextCompat.getColor(getApplicationContext(), R.color.defaultTextColor),
+                ContextCompat.getColor(getApplicationContext(), R.color.defaultBackgroundColor),
                 ContextCompat.getColor(getApplicationContext(), R.color.note2),
                 ContextCompat.getColor(getApplicationContext(), R.color.note3),
                 ContextCompat.getColor(getApplicationContext(), R.color.note4),
