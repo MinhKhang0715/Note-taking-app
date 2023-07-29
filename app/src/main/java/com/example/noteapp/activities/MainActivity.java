@@ -1,20 +1,32 @@
 package com.example.noteapp.activities;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Patterns;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
@@ -33,9 +45,11 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
     private final static int ACTION_ADD_NOTE = 1;
     private final static int ACTION_VIEW_NOTES = 2;
     private final static int ACTION_UPDATE_NOTE = 3;
+    private final static int REQUEST_READ_IMAGES_CODE = 4;
     private RecyclerView notesView;
     private List<Note> noteList;
     private NotesAdapter notesAdapter;
+    private AlertDialog addURLDialog;
     private int noteClickedPosition;
 
     private final ActivityResultLauncher<Intent> createNoteActivity = registerForActivityResult(
@@ -43,6 +57,24 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
             result -> {
                 if (result.getResultCode() == RESULT_OK)
                     getNotes(ACTION_ADD_NOTE, false);
+            }
+    );
+
+    private final ActivityResultLauncher<Intent> selectImageActivity = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    Intent intent = result.getData();
+                    if (intent != null) {
+                        Uri selectedImageUri = intent.getData();
+                        if (selectedImageUri != null) {
+                            createNoteActivity.launch(new Intent(MainActivity.this, CreateNoteActivity.class)
+                                    .putExtra("isQuickAction", true)
+                                    .putExtra("quickActionType", "image")
+                                    .putExtra("imgPath", getPathFromUri(selectedImageUri)));
+                        }
+                    }
+                }
             }
     );
 
@@ -72,6 +104,25 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         notesAdapter = new NotesAdapter(noteList, this);
         notesView.setAdapter(notesAdapter);
         getNotes(ACTION_VIEW_NOTES, false);
+
+        findViewById(R.id.imgAddNote).setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
+
+        findViewById(R.id.imgAddImage).setOnClickListener(view -> {
+            if (ContextCompat.checkSelfPermission(
+                    getApplicationContext(),
+                    Manifest.permission.READ_MEDIA_IMAGES
+            ) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        MainActivity.this,
+                        new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+                        REQUEST_READ_IMAGES_CODE
+                );
+            } else {
+                selectImageActivity.launch(new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI));
+            }
+        });
+
+        findViewById(R.id.imgAddWebLink).setOnClickListener(view -> showAddURLDialog());
 
         EditText inputSearch = findViewById(R.id.inputSearch);
         inputSearch.addTextChangedListener(new TextWatcher() {
@@ -126,6 +177,65 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                 }
             });
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_READ_IMAGES_CODE && grantResults.length > 0) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                selectImageActivity.launch(new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI));
+            else showToast("Permission denied");
+        }
+    }
+
+    private String getPathFromUri(Uri imgUri) {
+        String path;
+        Cursor cursor = getContentResolver().query(imgUri, null, null, null, null);
+        if (cursor == null)
+            return imgUri.getPath();
+        else {
+            cursor.moveToFirst();
+            int index = cursor.getColumnIndex("_data");
+            path = cursor.getString(index);
+            cursor.close();
+            return path;
+        }
+    }
+
+    private void showAddURLDialog() {
+        if (addURLDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            View addURLDialogView = LayoutInflater.from(this).inflate(
+                    R.layout.add_url_dialog,
+                    findViewById(R.id.addURLDialog)
+            );
+            builder.setView(addURLDialogView);
+            addURLDialog = builder.create();
+
+            if (addURLDialog.getWindow() != null)
+                addURLDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+
+            final EditText inputURL = addURLDialogView.findViewById(R.id.inputURL);
+            inputURL.requestFocus();
+
+            addURLDialogView.findViewById(R.id.btnAdd).setOnClickListener(view -> {
+                String url = inputURL.getText().toString().trim();
+                if (url.isEmpty())
+                    showToast("Enter your URL");
+                else if (!Patterns.WEB_URL.matcher(url).matches())
+                    showToast("Enter a valid URL");
+                else {
+                    addURLDialog.dismiss();
+                    createNoteActivity.launch(new Intent(MainActivity.this, CreateNoteActivity.class)
+                            .putExtra("isQuickAction", true)
+                            .putExtra("quickActionType", "url")
+                            .putExtra("URL", url));
+                }
+            });
+            addURLDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> addURLDialog.dismiss());
+        }
+        addURLDialog.show();
     }
 
     private void showToast(String message) {

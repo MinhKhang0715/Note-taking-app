@@ -99,10 +99,32 @@ public class CreateNoteActivity extends AppCompatActivity {
         layoutURL = findViewById(R.id.layoutURL);
         mainURL = findViewById(R.id.mainURL);
         selectedNoteColor = "#333333"; // default color
+        findViewById(R.id.imgBack).setOnClickListener(view -> finish());
+        ImageView saveButton = findViewById(R.id.imgSave);
+        saveButton.setOnClickListener(view -> saveNote());
 
-        if (getIntent().getBooleanExtra("isViewOrUpdate", false)) {
+        Intent fromMainActivityIntent = getIntent();
+
+        if (fromMainActivityIntent.getBooleanExtra("isViewOrUpdate", false)) {
             fromMainActivityNote = (Note) getIntent().getSerializableExtra("note");
             setViewOrUpdateNote();
+        } else if (fromMainActivityIntent.getBooleanExtra("isQuickAction", false)) {
+            String type = fromMainActivityIntent.getStringExtra("quickActionType");
+            if (type != null) {
+                switch (type) {
+                    case "image": {
+                        selectedImagePath = fromMainActivityIntent.getStringExtra("imgPath");
+                        noteImage.setImageBitmap(BitmapFactory.decodeFile(selectedImagePath));
+                        noteImage.setVisibility(View.VISIBLE);
+                        findViewById(R.id.removeImage).setVisibility(View.VISIBLE);
+                    }
+                    case "url": {
+                        String url = fromMainActivityIntent.getStringExtra("URL");
+                        layoutURL.setVisibility(View.VISIBLE);
+                        mainURL.setText(url);
+                    }
+                }
+            }
         } else {
             dateTime.setText(
                     new SimpleDateFormat("EEEE, dd MMMM yyyy HH:mm a", Locale.getDefault())
@@ -139,13 +161,6 @@ public class CreateNoteActivity extends AppCompatActivity {
 
         initAndShowNoteOptions();
         setNoteColor();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        ImageView saveButton = findViewById(R.id.imgSave);
-        saveButton.setOnClickListener(view -> saveNote());
     }
 
     @Override
