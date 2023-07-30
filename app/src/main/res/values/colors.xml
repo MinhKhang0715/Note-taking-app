@@ -18,4 +18,5 @@
     <color name="note4">#3A52FC</color>
     <color name="note5">#000000</color>
     <color name="delete">#FF726F</color>
+    <color name="chosen_note_color">#A2DED0</color>
 </resources>

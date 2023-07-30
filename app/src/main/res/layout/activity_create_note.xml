@@ -39,7 +39,7 @@
                 android:background="@drawable/background_done_button"
                 android:contentDescription="@string/app_name"
                 android:padding="@dimen/_4sdp"
-                android:src="@drawable/ic_done_24"
+                android:src="@drawable/ic_check_24"
                 app:tint="@color/icon"
                 app:layout_constraintBottom_toBottomOf="@id/imgBack"
                 app:layout_constraintEnd_toEndOf="parent"

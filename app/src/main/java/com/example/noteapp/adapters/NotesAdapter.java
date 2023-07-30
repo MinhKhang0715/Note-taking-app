@@ -6,6 +6,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -77,14 +78,17 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     static class NoteViewHolder extends RecyclerView.ViewHolder {
         TextView noteTitle, noteSubtitle, dateTimeText;
         LinearLayout noteContainer;
+        FrameLayout noteFrame;
         RoundedImageView roundedImageView;
 
         NoteViewHolder(@NonNull View itemView) {
             super(itemView);
+
             noteTitle = itemView.findViewById(R.id.titleText);
             noteSubtitle = itemView.findViewById(R.id.subtitleText);
             dateTimeText = itemView.findViewById(R.id.dateTimeText);
             noteContainer = itemView.findViewById(R.id.noteContainer);
+            noteFrame = itemView.findViewById(R.id.noteFrameLayout);
             roundedImageView = itemView.findViewById(R.id.roundedNoteImage);
         }
 
@@ -94,7 +98,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             else noteSubtitle.setText(note.getSubtitle());
             dateTimeText.setText(note.getDateTime());
 
-            GradientDrawable gradientDrawable = (GradientDrawable) noteContainer.getBackground();
+            GradientDrawable gradientDrawable = (GradientDrawable) noteFrame.getBackground();
             if (note.getColor() != null)
                 gradientDrawable.setColor(Color.parseColor(note.getColor()));
             else gradientDrawable.setColor(Color.parseColor("#333333"));
