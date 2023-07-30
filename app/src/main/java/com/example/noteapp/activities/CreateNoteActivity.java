@@ -125,6 +125,10 @@ public class CreateNoteActivity extends AppCompatActivity {
                     }
                 }
             }
+            dateTime.setText(
+                    new SimpleDateFormat("EEEE, dd MMMM yyyy HH:mm a", Locale.getDefault())
+                            .format(new Date())
+            );
         } else {
             dateTime.setText(
                     new SimpleDateFormat("EEEE, dd MMMM yyyy HH:mm a", Locale.getDefault())
