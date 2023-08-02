@@ -16,8 +16,10 @@ import android.text.TextWatcher;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -25,6 +27,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
@@ -46,11 +49,15 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
     private final static int ACTION_VIEW_NOTES = 2;
     private final static int ACTION_UPDATE_NOTE = 3;
     private final static int REQUEST_READ_IMAGES_CODE = 4;
+//    private static MainActivity mainActivityInstance;
     private RecyclerView notesView;
     private List<Note> noteList;
     private NotesAdapter notesAdapter;
     private AlertDialog addURLDialog;
+    private static ConstraintLayout deleteOptions;
     private int noteClickedPosition;
+    public static boolean isEventCheckbox = false;
+    public static boolean isCancelButtonClicked = false;
 
     private final ActivityResultLauncher<Intent> createNoteActivity = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -138,6 +145,27 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                     notesAdapter.setSearch(editable.toString());
             }
         });
+
+        deleteOptions = findViewById(R.id.layoutDeleteOptions);
+        deleteOptions.findViewById(R.id.btnCancelDelete).setOnClickListener(view -> {
+            isCancelButtonClicked = true;
+            isEventCheckbox = false;
+            notesAdapter.unselectAll();
+            ((CheckBox) deleteOptions.findViewById(R.id.checkbox)).setChecked(false);
+            notesAdapter.isLongClickConsumed = false;
+            deleteOptions.setVisibility(View.GONE);
+        });
+        CheckBox checkBox = deleteOptions.findViewById(R.id.checkbox);
+        checkBox.setOnClickListener(view -> {
+            isEventCheckbox = true;
+            if (checkBox.isChecked()) {
+                notesAdapter.setSelectAll();
+                checkBox.setChecked(true);
+            } else {
+                notesAdapter.unselectAll();
+                checkBox.setChecked(false);
+            }
+        });
     }
 
     @Override
@@ -147,6 +175,34 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                 new Intent(getApplicationContext(), CreateNoteActivity.class)
                         .putExtra("isViewOrUpdate", true)
                         .putExtra("note", note)
+        );
+    }
+
+    @Override
+    public void onNoteLongClicked(NotesAdapter.NoteViewHolder noteViewHolder) {
+        isCancelButtonClicked = false;
+        noteViewHolder.setSelected(true);
+
+        deleteOptions.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_READ_IMAGES_CODE && grantResults.length > 0) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                selectImageActivity.launch(new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI));
+            else showToast("Permission denied");
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    public static void setNumberOfSelectedNotes(int numberOfSelectedNotes) {
+        ((TextView) deleteOptions.findViewById(R.id.deleteMessage)).setText("You will delete " +
+                (numberOfSelectedNotes > 1 ?
+                        (numberOfSelectedNotes + " notes") :
+                        (numberOfSelectedNotes + " note")
+                )
         );
     }
 
@@ -177,16 +233,6 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                 }
             });
         });
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_READ_IMAGES_CODE && grantResults.length > 0) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                selectImageActivity.launch(new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI));
-            else showToast("Permission denied");
-        }
     }
 
     private String getPathFromUri(Uri imgUri) {

@@ -3,17 +3,21 @@ package com.example.noteapp.adapters;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.noteapp.R;
+import com.example.noteapp.activities.MainActivity;
 import com.example.noteapp.entities.Note;
 import com.example.noteapp.listeners.NoteListener;
 import com.makeramen.roundedimageview.RoundedImageView;
@@ -25,6 +29,9 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     private List<Note> listOfNotes;
     private final List<Note>  intermediateListOfNotes;
     private final NoteListener noteListener;
+    private final List<NoteViewHolder> selectedNoteViewHolderList = new ArrayList<>();
+    public boolean isSelectedAll = false;
+    public volatile boolean isLongClickConsumed = false;
 
     public NotesAdapter(List<Note> listOfNotes, NoteListener noteListener) {
         this.listOfNotes = listOfNotes;
@@ -62,7 +69,43 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
         holder.setNote(listOfNotes.get(position));
-        holder.noteContainer.setOnClickListener(view -> noteListener.onNoteClicked(listOfNotes.get(position), position));
+
+        if (MainActivity.isEventCheckbox || MainActivity.isCancelButtonClicked)
+            holder.isSelected = isSelectedAll;
+
+        if (holder.isSelected()) {
+            holder.checkbox.setVisibility(View.VISIBLE);
+            Log.d("Holder selected", "Set check box visibility to VISIBLE");
+        } else {
+            holder.checkbox.setVisibility(View.GONE);
+            Log.d("Holder not selected", "Set check box visibility to GONE");
+        }
+
+        holder.noteContainer.setOnClickListener(view -> {
+            MainActivity.isEventCheckbox = false;
+            if (isLongClickConsumed) {
+                holder.setSelected(!holder.isSelected());
+                notifyItemChanged(position, holder.isSelected);
+                if (holder.isSelected())
+                    selectedNoteViewHolderList.add(holder);
+                else selectedNoteViewHolderList.remove(holder);
+                MainActivity.setNumberOfSelectedNotes(selectedNoteViewHolderList.size());
+                Toast.makeText(view.getContext(), "Is selected: " + holder.isSelected(), Toast.LENGTH_SHORT).show();
+            }
+            else noteListener.onNoteClicked(listOfNotes.get(position), position);
+        });
+
+        holder.noteContainer.setOnLongClickListener(view -> {
+            isLongClickConsumed = true;
+            noteListener.onNoteLongClicked(holder);
+            notifyItemChanged(position, holder.isSelected);
+            if (holder.isSelected())
+                selectedNoteViewHolderList.add(holder);
+            else selectedNoteViewHolderList.remove(holder);
+            MainActivity.setNumberOfSelectedNotes(selectedNoteViewHolderList.size());
+            Toast.makeText(view.getContext(), "Long click", Toast.LENGTH_SHORT).show();
+            return true;
+        });
     }
 
     @Override
@@ -75,11 +118,43 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
         return position;
     }
 
-    static class NoteViewHolder extends RecyclerView.ViewHolder {
+    public List<NoteViewHolder> getSelectedNoteViewHolderList() {
+        return selectedNoteViewHolderList;
+    }
+
+    public void setSelectAll() {
+        isSelectedAll = true;
+        notifyDataSetChanged();
+        MainActivity.setNumberOfSelectedNotes(listOfNotes.size());
+    }
+
+    public void unselectAll() {
+        isSelectedAll = false;
+        notifyDataSetChanged();
+        selectedNoteViewHolderList.clear();
+        MainActivity.setNumberOfSelectedNotes(selectedNoteViewHolderList.size());
+    }
+
+    public class NoteViewHolder extends RecyclerView.ViewHolder {
         TextView noteTitle, noteSubtitle, dateTimeText;
         LinearLayout noteContainer;
         FrameLayout noteFrame;
         RoundedImageView roundedImageView;
+        ImageView checkbox;
+        boolean isSelected = false;
+        Note note;
+
+        public boolean isSelected() {
+            return isSelected;
+        }
+
+        public void setSelected(boolean selected) {
+            isSelected = selected;
+        }
+
+        public Note getNote() {
+            return note;
+        }
 
         NoteViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -90,9 +165,22 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             noteContainer = itemView.findViewById(R.id.noteContainer);
             noteFrame = itemView.findViewById(R.id.noteFrameLayout);
             roundedImageView = itemView.findViewById(R.id.roundedNoteImage);
+            checkbox = itemView.findViewById(R.id.checkbox);
+//            itemView.setOnClickListener(view -> {
+//                if (NotesAdapter.this.isLongClickConsumed) {
+//                    this.setSelected(!this.isSelected);
+//                    if (this.isSelected)
+//                        NotesAdapter.this.selectedNoteViewHolderList.add(this);
+//                    else
+//                        NotesAdapter.this.selectedNoteViewHolderList.remove(this);
+//                    MainActivity.setNumberOfSelectedNotes( NotesAdapter.this.selectedNoteViewHolderList.size());
+//                    notifyItemChanged(getLayoutPosition());
+//                }
+//            });
         }
 
-        void setNote(Note note) {
+        void setNote(@NonNull final Note note) {
+            this.note = note;
             noteTitle.setText(note.getTitle());
             if (note.getSubtitle().isEmpty()) noteSubtitle.setVisibility(View.GONE);
             else noteSubtitle.setText(note.getSubtitle());

@@ -13,8 +13,7 @@
         android:id="@+id/noteContainer"
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/_8sdp">
+        android:layout_height="wrap_content">
 
         <com.makeramen.roundedimageview.RoundedImageView
             android:id="@+id/roundedNoteImage"
@@ -29,6 +28,7 @@
             android:id="@+id/titleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_8sdp"
             android:layout_marginEnd="@dimen/_8sdp"
             android:layout_marginTop="@dimen/_8sdp"
             android:includeFontPadding="false"
@@ -39,6 +39,7 @@
             android:id="@+id/subtitleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_8sdp"
             android:layout_marginEnd="@dimen/_8sdp"
             android:layout_marginTop="@dimen/_4sdp"
             android:layout_marginBottom="@dimen/_4sdp"
@@ -50,6 +51,7 @@
             android:id="@+id/dateTimeText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_8sdp"
             android:layout_marginBottom="@dimen/_8sdp"
             android:includeFontPadding="false"
             android:textColor="@color/noteSubtitle"
@@ -57,6 +59,7 @@
     </LinearLayout>
 
     <ImageView
+        android:id="@+id/checkbox"
         android:layout_width="@dimen/_15sdp"
         android:layout_height="@dimen/_15sdp"
         android:layout_marginTop="@dimen/_5sdp"
@@ -64,6 +67,7 @@
         app:tint="@color/defaultBackgroundColor"
         android:contentDescription="@string/app_name"
         android:background="@drawable/background_chosen_note"
+        android:visibility="gone"
         android:layout_gravity="end"
         android:layout_marginEnd="@dimen/_8sdp"/>
 </FrameLayout>
