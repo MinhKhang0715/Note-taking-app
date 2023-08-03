@@ -49,12 +49,12 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
     private final static int ACTION_VIEW_NOTES = 2;
     private final static int ACTION_UPDATE_NOTE = 3;
     private final static int REQUEST_READ_IMAGES_CODE = 4;
-//    private static MainActivity mainActivityInstance;
+    //    private static MainActivity mainActivityInstance;
     private RecyclerView notesView;
     private List<Note> noteList;
-    private NotesAdapter notesAdapter;
+    private static NotesAdapter notesAdapter;
     private AlertDialog addURLDialog;
-    private static ConstraintLayout deleteOptions;
+    private static ConstraintLayout layoutDeleteOptions;
     private int noteClickedPosition;
     public static boolean isEventCheckbox = false;
     public static boolean isCancelButtonClicked = false;
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
             ) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(
                         MainActivity.this,
-                        new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                         REQUEST_READ_IMAGES_CODE
                 );
             } else {
@@ -146,16 +146,16 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
             }
         });
 
-        deleteOptions = findViewById(R.id.layoutDeleteOptions);
-        deleteOptions.findViewById(R.id.btnCancelDelete).setOnClickListener(view -> {
+        layoutDeleteOptions = findViewById(R.id.layoutDeleteOptions);
+        layoutDeleteOptions.findViewById(R.id.btnCancelDelete).setOnClickListener(view -> {
             isCancelButtonClicked = true;
             isEventCheckbox = false;
             notesAdapter.unselectAll();
-            ((CheckBox) deleteOptions.findViewById(R.id.checkbox)).setChecked(false);
+            ((CheckBox) layoutDeleteOptions.findViewById(R.id.checkbox)).setChecked(false);
             notesAdapter.isLongClickConsumed = false;
-            deleteOptions.setVisibility(View.GONE);
+            layoutDeleteOptions.setVisibility(View.GONE);
         });
-        CheckBox checkBox = deleteOptions.findViewById(R.id.checkbox);
+        CheckBox checkBox = layoutDeleteOptions.findViewById(R.id.checkbox);
         checkBox.setOnClickListener(view -> {
             isEventCheckbox = true;
             if (checkBox.isChecked()) {
@@ -180,10 +180,10 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
 
     @Override
     public void onNoteLongClicked(NotesAdapter.NoteViewHolder noteViewHolder) {
-        isCancelButtonClicked = false;
+        if (isCancelButtonClicked) isCancelButtonClicked = false;
         noteViewHolder.setSelected(true);
 
-        deleteOptions.setVisibility(View.VISIBLE);
+        layoutDeleteOptions.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -196,14 +196,29 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         }
     }
 
+    public static ConstraintLayout getLayoutDeleteOptions() {
+        return layoutDeleteOptions;
+    }
+
+    /**
+     * Using an executor to run the code after the adapter updated its number of selected notes
+     * (via selectedNoteViewHolderList)<br>
+     * The <b>delay time</b> is set to make sure the code will run <i>after</i>
+     * the number of selected notes is updated.
+     */
     @SuppressLint("SetTextI18n")
-    public static void setNumberOfSelectedNotes(int numberOfSelectedNotes) {
-        ((TextView) deleteOptions.findViewById(R.id.deleteMessage)).setText("You will delete " +
-                (numberOfSelectedNotes > 1 ?
-                        (numberOfSelectedNotes + " notes") :
-                        (numberOfSelectedNotes + " note")
-                )
-        );
+    public static void setDeleteMessage() {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+        executorService.execute(() -> handler.postDelayed(() -> {
+            int numberOfSelectedNotes = notesAdapter.getSelectedNoteViewHolderList().size();
+            ((TextView) layoutDeleteOptions.findViewById(R.id.deleteMessage)).setText("You will delete " +
+                    (numberOfSelectedNotes > 1 ?
+                            (numberOfSelectedNotes + " notes") :
+                            (numberOfSelectedNotes + " note")
+                    )
+            );
+        }, 20));
     }
 
     @SuppressLint("NotifyDataSetChanged")

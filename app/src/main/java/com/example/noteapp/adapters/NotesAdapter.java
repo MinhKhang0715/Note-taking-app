@@ -7,12 +7,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.LongDef;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -75,35 +77,34 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
         if (holder.isSelected()) {
             holder.checkbox.setVisibility(View.VISIBLE);
-            Log.d("Holder selected", "Set check box visibility to VISIBLE");
+            if (selectedNoteViewHolderList.contains(holder)) return;
+            selectedNoteViewHolderList.add(holder);
+            Log.d("Check holder list", "Size is " + selectedNoteViewHolderList.size());
         } else {
             holder.checkbox.setVisibility(View.GONE);
-            Log.d("Holder not selected", "Set check box visibility to GONE");
+            selectedNoteViewHolderList.remove(holder);
+            Log.d("Check holder list", "Size is " + selectedNoteViewHolderList.size());
         }
 
         holder.noteContainer.setOnClickListener(view -> {
-            MainActivity.isEventCheckbox = false;
-            if (isLongClickConsumed) {
+            if (isLongClickConsumed) { // The long click event is consumed means the user is selecting/unselecting notes
+                MainActivity.isEventCheckbox = false;
+                ((CheckBox) MainActivity.getLayoutDeleteOptions().findViewById(R.id.checkbox)).setChecked(false);
                 holder.setSelected(!holder.isSelected());
                 notifyItemChanged(position, holder.isSelected);
-                if (holder.isSelected())
-                    selectedNoteViewHolderList.add(holder);
-                else selectedNoteViewHolderList.remove(holder);
-                MainActivity.setNumberOfSelectedNotes(selectedNoteViewHolderList.size());
-                Toast.makeText(view.getContext(), "Is selected: " + holder.isSelected(), Toast.LENGTH_SHORT).show();
+                MainActivity.setDeleteMessage();
+//                Toast.makeText(view.getContext(), "Is selected: " + holder.isSelected(), Toast.LENGTH_SHORT).show();
             }
             else noteListener.onNoteClicked(listOfNotes.get(position), position);
         });
 
         holder.noteContainer.setOnLongClickListener(view -> {
+            if (isLongClickConsumed) return true; // If the long click event was already consumed, omit it and do nothing
             isLongClickConsumed = true;
             noteListener.onNoteLongClicked(holder);
             notifyItemChanged(position, holder.isSelected);
-            if (holder.isSelected())
-                selectedNoteViewHolderList.add(holder);
-            else selectedNoteViewHolderList.remove(holder);
-            MainActivity.setNumberOfSelectedNotes(selectedNoteViewHolderList.size());
-            Toast.makeText(view.getContext(), "Long click", Toast.LENGTH_SHORT).show();
+            MainActivity.setDeleteMessage();
+//            Toast.makeText(view.getContext(), "Long click", Toast.LENGTH_SHORT).show();
             return true;
         });
     }
@@ -125,17 +126,17 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     public void setSelectAll() {
         isSelectedAll = true;
         notifyDataSetChanged();
-        MainActivity.setNumberOfSelectedNotes(listOfNotes.size());
+        MainActivity.setDeleteMessage();
     }
 
     public void unselectAll() {
         isSelectedAll = false;
         notifyDataSetChanged();
         selectedNoteViewHolderList.clear();
-        MainActivity.setNumberOfSelectedNotes(selectedNoteViewHolderList.size());
+        MainActivity.setDeleteMessage();
     }
 
-    public class NoteViewHolder extends RecyclerView.ViewHolder {
+    public static class NoteViewHolder extends RecyclerView.ViewHolder {
         TextView noteTitle, noteSubtitle, dateTimeText;
         LinearLayout noteContainer;
         FrameLayout noteFrame;
