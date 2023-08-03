@@ -166,17 +166,6 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             noteFrame = itemView.findViewById(R.id.noteFrameLayout);
             roundedImageView = itemView.findViewById(R.id.roundedNoteImage);
             checkbox = itemView.findViewById(R.id.checkbox);
-//            itemView.setOnClickListener(view -> {
-//                if (NotesAdapter.this.isLongClickConsumed) {
-//                    this.setSelected(!this.isSelected);
-//                    if (this.isSelected)
-//                        NotesAdapter.this.selectedNoteViewHolderList.add(this);
-//                    else
-//                        NotesAdapter.this.selectedNoteViewHolderList.remove(this);
-//                    MainActivity.setNumberOfSelectedNotes( NotesAdapter.this.selectedNoteViewHolderList.size());
-//                    notifyItemChanged(getLayoutPosition());
-//                }
-//            });
         }
 
         void setNote(@NonNull final Note note) {
