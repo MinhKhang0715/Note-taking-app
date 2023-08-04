@@ -288,7 +288,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         selectImageActivity.launch(new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI));
     }
 
-    private void configLayoutNoteOptions(LinearLayout layout) {
+    private void configLayoutNoteOptions(@NonNull LinearLayout layout) {
         final int[] colors = {
                 ContextCompat.getColor(getApplicationContext(), R.color.defaultBackgroundColor),
                 ContextCompat.getColor(getApplicationContext(), R.color.note2),
@@ -311,7 +311,7 @@ public class CreateNoteActivity extends AppCompatActivity {
                 selectedNoteColor = String.format("#%06X", (0xFFFFFF & colors[index]));
                 setNoteColor();
                 for (int j = 0; j < colorViews.length; j++) {
-                    colorViews[j].setImageResource(j == index ? R.drawable.ic_done_24 : 0);
+                    colorViews[j].setImageResource(j == index ? R.drawable.ic_check_24 : 0);
                 }
             });
         }

@@ -20,4 +20,10 @@ public interface NoteDAO {
 
     @Delete
     void deleteNote(Note note);
+
+    @Query("DELETE FROM note WHERE id in (:idList)")
+    void deleteNotesByIdList(List<Integer> idList);
+
+    @Query("DELETE FROM note")
+    void deleteAllNotes();
 }

@@ -120,4 +120,6 @@
         app:layout_constraintBottom_toTopOf="@id/quickActions"
         app:layout_constraintEnd_toEndOf="parent"/>
 
+    <include layout="@layout/delete_options"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
