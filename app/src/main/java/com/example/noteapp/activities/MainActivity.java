@@ -145,7 +145,6 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         inputSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 

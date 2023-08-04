@@ -288,7 +288,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         selectImageActivity.launch(new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI));
     }
 
-    private void configLayoutNoteOptions(LinearLayout layout) {
+    private void configLayoutNoteOptions(@NonNull LinearLayout layout) {
         final int[] colors = {
                 ContextCompat.getColor(getApplicationContext(), R.color.defaultBackgroundColor),
                 ContextCompat.getColor(getApplicationContext(), R.color.note2),

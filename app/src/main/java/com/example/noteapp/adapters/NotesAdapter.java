@@ -39,7 +39,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
         intermediateListOfNotes = listOfNotes;
     }
 
-    public void setSearch(final String searchKeyword) {
+    public void setSearch(@NonNull final String searchKeyword) {
         if (searchKeyword.trim().isEmpty()) listOfNotes = intermediateListOfNotes;
         else {
             List<Note> temp = new ArrayList<>();
@@ -141,13 +141,13 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     }
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {
-        TextView noteTitle, noteSubtitle, dateTimeText;
-        LinearLayout noteContainer;
-        FrameLayout noteFrame;
-        RoundedImageView roundedImageView;
-        ImageView checkbox;
-        boolean isSelected = false;
-        Note note;
+        private final TextView noteTitle, noteSubtitle, dateTimeText;
+        private final LinearLayout noteContainer;
+        private final FrameLayout noteFrame;
+        private final RoundedImageView roundedImageView;
+        private final ImageView checkbox;
+        private boolean isSelected = false;
+        private Note note;
 
         public boolean isSelected() {
             return isSelected;
@@ -173,7 +173,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             checkbox = itemView.findViewById(R.id.checkbox);
         }
 
-        void setNote(@NonNull final Note note) {
+        private void setNote(@NonNull final Note note) {
             this.note = note;
             noteTitle.setText(note.getTitle());
             if (note.getSubtitle().isEmpty()) noteSubtitle.setVisibility(View.GONE);
