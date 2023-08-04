@@ -29,7 +29,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     private List<Note> listOfNotes;
     private final List<Note>  intermediateListOfNotes;
     private final NoteListener noteListener;
-    private final List<NoteViewHolder> selectedNoteViewHolderList = new ArrayList<>();
+    public final List<NoteViewHolder> selectedNoteViewHolderList = new ArrayList<>();
     public boolean isSelectedAll = false;
     public volatile boolean isLongClickConsumed = false;
 
@@ -51,9 +51,9 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             }
             listOfNotes = temp;
         }
-//        notifyItemRangeChanged(0, listOfNotes.size());
         notifyDataSetChanged();
     }
+
     @NonNull
     @Override
     public NoteViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -84,6 +84,8 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             Log.d("Check holder list", "Size is " + selectedNoteViewHolderList.size());
         }
 
+        Log.d("Check selectedNoteViewHolderPosition", listOfNotes.toString());
+
         holder.noteContainer.setOnClickListener(view -> {
             if (isLongClickConsumed) { // The long click event is consumed means the user is selecting/unselecting notes
                 MainActivity.isEventCheckbox = false;
@@ -91,7 +93,6 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
                 holder.setSelected(!holder.isSelected());
                 notifyItemChanged(position, holder.isSelected);
                 MainActivity.setDeleteMessage();
-//                Toast.makeText(view.getContext(), "Is selected: " + holder.isSelected(), Toast.LENGTH_SHORT).show();
             }
             else noteListener.onNoteClicked(listOfNotes.get(position), position);
         });
@@ -115,6 +116,14 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     @Override
     public int getItemViewType(int position) {
         return position;
+    }
+
+    public void removeSelectedNotesAtPosition() {
+        for (NoteViewHolder noteViewHolder : selectedNoteViewHolderList) {
+            noteViewHolder.setSelected(false);
+            listOfNotes.remove(noteViewHolder.note);
+        }
+        notifyDataSetChanged();
     }
 
     public List<NoteViewHolder> getSelectedNoteViewHolderList() {

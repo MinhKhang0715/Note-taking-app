@@ -49,7 +49,6 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
     private final static int ACTION_VIEW_NOTES = 2;
     private final static int ACTION_UPDATE_NOTE = 3;
     private final static int REQUEST_READ_IMAGES_CODE = 4;
-    //    private static MainActivity mainActivityInstance;
     private RecyclerView notesView;
     private List<Note> noteList;
     private static NotesAdapter notesAdapter;
@@ -58,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
     private int noteClickedPosition;
     public static boolean isEventCheckbox = false;
     public static boolean isCancelButtonClicked = false;
+    private static int numberOfSelectedNotes;
 
     private final ActivityResultLauncher<Intent> createNoteActivity = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -155,6 +155,10 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
             notesAdapter.isLongClickConsumed = false;
             layoutDeleteOptions.setVisibility(View.GONE);
         });
+        layoutDeleteOptions.findViewById(R.id.btnDelete).setOnClickListener(view -> {
+            if (numberOfSelectedNotes == 0) return;
+            showDeleteNotesDialog();
+        });
         CheckBox checkBox = layoutDeleteOptions.findViewById(R.id.checkbox);
         checkBox.setOnClickListener(view -> {
             isEventCheckbox = true;
@@ -211,7 +215,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
         executorService.execute(() -> handler.postDelayed(() -> {
-            int numberOfSelectedNotes = notesAdapter.getSelectedNoteViewHolderList().size();
+            numberOfSelectedNotes = notesAdapter.getSelectedNoteViewHolderList().size();
             ((TextView) layoutDeleteOptions.findViewById(R.id.deleteMessage)).setText("You will delete " +
                     (numberOfSelectedNotes > 1 ?
                             (numberOfSelectedNotes + " notes") :
@@ -297,6 +301,53 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
             addURLDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> addURLDialog.dismiss());
         }
         addURLDialog.show();
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void showDeleteNotesDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        View deleteNoteDialogView = LayoutInflater.from(this).inflate(
+                R.layout.delete_note_dialog,
+                findViewById(R.id.deleteNoteDialog)
+        );
+        builder.setView(deleteNoteDialogView);
+        AlertDialog deleteNoteDialog = builder.create();
+        if (deleteNoteDialog.getWindow() != null)
+            deleteNoteDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+        ((TextView) deleteNoteDialogView.findViewById(R.id.message)).setText("Are you sure you want to delete " +
+                (numberOfSelectedNotes > 1 ?
+                        (numberOfSelectedNotes + " notes") :
+                        (numberOfSelectedNotes + " note")
+                ));
+        deleteNoteDialogView.findViewById(R.id.btnDelete).setOnClickListener(view -> {
+            ExecutorService executorService = Executors.newSingleThreadExecutor();
+            Handler handler = new Handler(Looper.getMainLooper());
+            executorService.execute(() -> {
+                if (numberOfSelectedNotes == notesAdapter.getItemCount()) {
+                    NoteDatabase.getInstance(getApplicationContext()).noteDAO().deleteAllNotes();
+                    noteList.clear();
+                }
+                else {
+                    List<Integer> noteIds = new ArrayList<>();
+                    List<NotesAdapter.NoteViewHolder> noteViewHolderList = notesAdapter.getSelectedNoteViewHolderList();
+                    for (NotesAdapter.NoteViewHolder noteViewHolder : noteViewHolderList) {
+                        noteIds.add(noteViewHolder.getNote().getId());
+                        noteList.remove(noteViewHolder.getNote());
+                    }
+                    NoteDatabase.getInstance(getApplicationContext()).noteDAO().deleteNotesByIdList(noteIds);
+                }
+                handler.post(() -> {
+                    notesAdapter.removeSelectedNotesAtPosition();
+                    notesAdapter.selectedNoteViewHolderList.clear();
+                    numberOfSelectedNotes = 0;
+                    notesAdapter.isLongClickConsumed = false;
+                    layoutDeleteOptions.setVisibility(View.GONE);
+                    deleteNoteDialog.dismiss();
+                });
+            });
+        });
+        deleteNoteDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> deleteNoteDialog.dismiss());
+        deleteNoteDialog.show();
     }
 
     private void showToast(String message) {
