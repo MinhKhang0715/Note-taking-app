@@ -55,7 +55,17 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
     private AlertDialog addURLDialog;
     private static ConstraintLayout layoutDeleteOptions;
     private int noteClickedPosition;
+
+    /**
+     * When the user click on the checkbox, it means that they want to select/unselect all notes<br>
+     * If this flag is set to false it means the user is manually selecting notes
+     */
     public static boolean isEventCheckbox = false;
+
+    /**
+     * The cancel button in the <code>delete_options.xml</code> layout<br>
+     * When the user click on it, unselect all the notes and hide the layout
+     */
     public static boolean isCancelButtonClicked = false;
     private static int numberOfSelectedNotes;
 
@@ -331,13 +341,13 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                     List<Integer> noteIds = new ArrayList<>();
                     List<NotesAdapter.NoteViewHolder> noteViewHolderList = notesAdapter.getSelectedNoteViewHolderList();
                     for (NotesAdapter.NoteViewHolder noteViewHolder : noteViewHolderList) {
-                        noteIds.add(noteViewHolder.getNote().getId());
-                        noteList.remove(noteViewHolder.getNote());
+                        noteIds.add(noteViewHolder.getNote().getId()); // collect all selected note's ids to remove
+                        noteList.remove(noteViewHolder.getNote()); // make it in sync with NoteAdapter.listOfNotes
                     }
                     NoteDatabase.getInstance(getApplicationContext()).noteDAO().deleteNotesByIdList(noteIds);
                 }
                 handler.post(() -> {
-                    notesAdapter.removeSelectedNotesAtPosition();
+                    notesAdapter.removeSelectedNotes();
                     notesAdapter.selectedNoteViewHolderList.clear();
                     numberOfSelectedNotes = 0;
                     notesAdapter.isLongClickConsumed = false;

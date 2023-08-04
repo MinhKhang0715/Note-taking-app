@@ -84,8 +84,6 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             Log.d("Check holder list", "Size is " + selectedNoteViewHolderList.size());
         }
 
-        Log.d("Check selectedNoteViewHolderPosition", listOfNotes.toString());
-
         holder.noteContainer.setOnClickListener(view -> {
             if (isLongClickConsumed) { // The long click event is consumed means the user is selecting/unselecting notes
                 MainActivity.isEventCheckbox = false;
@@ -99,11 +97,10 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
         holder.noteContainer.setOnLongClickListener(view -> {
             if (isLongClickConsumed) return true; // If the long click event was already consumed, omit it and do nothing
-            isLongClickConsumed = true;
+            isLongClickConsumed = true; // true -> the user want to select multiple notes
             noteListener.onNoteLongClicked(holder);
             notifyItemChanged(position, holder.isSelected);
             MainActivity.setDeleteMessage();
-//            Toast.makeText(view.getContext(), "Long click", Toast.LENGTH_SHORT).show();
             return true;
         });
     }
@@ -118,7 +115,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
         return position;
     }
 
-    public void removeSelectedNotesAtPosition() {
+    public void removeSelectedNotes() {
         for (NoteViewHolder noteViewHolder : selectedNoteViewHolderList) {
             noteViewHolder.setSelected(false);
             listOfNotes.remove(noteViewHolder.note);
