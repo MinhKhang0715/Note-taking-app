@@ -9,7 +9,7 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="793dp"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingBottom="@dimen/_10sdp">
 
@@ -173,7 +173,7 @@
                 android:hint="@string/type_your_note"
                 android:importantForAutofill="no"
                 android:inputType="textMultiLine|textCapSentences"
-                android:minHeight="@dimen/_100sdp"
+                android:minHeight="@dimen/_400sdp"
                 android:textColor="@color/white"
                 android:textColorHint="@color/textHint"
                 android:textSize="@dimen/_13ssp"

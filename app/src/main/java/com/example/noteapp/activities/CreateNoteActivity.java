@@ -117,11 +117,13 @@ public class CreateNoteActivity extends AppCompatActivity {
                         noteImage.setImageBitmap(BitmapFactory.decodeFile(selectedImagePath));
                         noteImage.setVisibility(View.VISIBLE);
                         findViewById(R.id.removeImage).setVisibility(View.VISIBLE);
+                        break;
                     }
                     case "url": {
                         String url = fromMainActivityIntent.getStringExtra("URL");
                         layoutURL.setVisibility(View.VISIBLE);
                         mainURL.setText(url);
+                        break;
                     }
                 }
             }
