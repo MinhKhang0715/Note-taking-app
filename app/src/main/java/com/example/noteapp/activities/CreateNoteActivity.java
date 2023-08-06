@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.text.Editable;
+import android.text.Spannable;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
@@ -103,6 +104,9 @@ public class CreateNoteActivity extends AppCompatActivity {
         ImageView saveButton = findViewById(R.id.imgSave);
         saveButton.setOnClickListener(view -> saveNote());
 
+        noteContent.setAutoLinkMask(Linkify.WEB_URLS | Linkify.EMAIL_ADDRESSES);
+        noteContent.setMovementMethod(LinkMovementMethod.getInstance());
+
         Intent fromMainActivityIntent = getIntent();
 
         if (fromMainActivityIntent.getBooleanExtra("isViewOrUpdate", false)) {
@@ -156,13 +160,13 @@ public class CreateNoteActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                noteContent.setAutoLinkMask(Linkify.WEB_URLS | Linkify.EMAIL_ADDRESSES);
-                noteContent.setMovementMethod(LinkMovementMethod.getInstance());
-                Linkify.addLinks(noteContent, Linkify.WEB_URLS | Linkify.EMAIL_ADDRESSES);
+                Linkify.addLinks((Spannable) charSequence, Linkify.WEB_URLS);
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {}
+            public void afterTextChanged(Editable editable) {
+                Linkify.addLinks(editable, Linkify.WEB_URLS | Linkify.EMAIL_ADDRESSES);
+            }
         });
 
         initAndShowNoteOptions();
