@@ -19,4 +19,9 @@
     <string name="delete_this_note">Delete this note</string>
     <string name="do_you_want_to_delete_note_s">Do you want to delete note(s)?</string>
     <string name="select_all">Select all</string>
+    <string name="bold_text_icon">Bold text icon</string>
+    <string name="italic_text_icon">Italic text icon</string>
+    <string name="underline_icon">Underline icon</string>
+    <string name="strikethrough_icon">Strikethrough icon</string>
+    <string name="save_button">Save button</string>
 </resources>

@@ -48,32 +48,40 @@
                     android:id="@+id/icBoldText"
                     android:layout_width="@dimen/_20sdp"
                     android:layout_height="@dimen/_20sdp"
+                    android:onClick="onBoldTextIconClicked"
                     android:src="@drawable/ic_format_bold_24"
-                    app:tint="@color/icon" />
+                    app:tint="@color/icon"
+                    android:contentDescription="@string/bold_text_icon"/>
 
                 <ImageView
                     android:id="@+id/icItalic"
                     android:layout_width="@dimen/_20sdp"
                     android:layout_height="@dimen/_20sdp"
                     android:layout_marginStart="@dimen/_10sdp"
+                    android:onClick="onItalicTextIconClicked"
                     android:src="@drawable/ic_format_italic_24"
-                    app:tint="@color/icon" />
+                    app:tint="@color/icon"
+                    android:contentDescription="@string/italic_text_icon"/>
 
                 <ImageView
                     android:id="@+id/icUnderlined"
                     android:layout_width="@dimen/_20sdp"
                     android:layout_height="@dimen/_20sdp"
                     android:layout_marginStart="@dimen/_10sdp"
+                    android:onClick="onUnderlinedTextIconClicked"
                     android:src="@drawable/ic_format_underlined_24"
-                    app:tint="@color/icon" />
+                    app:tint="@color/icon"
+                    android:contentDescription="@string/underline_icon"/>
 
                 <ImageView
                     android:id="@+id/icStrikethrough"
                     android:layout_width="@dimen/_20sdp"
                     android:layout_height="@dimen/_20sdp"
                     android:layout_marginStart="@dimen/_10sdp"
+                    android:onClick="onStrikethroughIconClicked"
                     android:src="@drawable/ic_format_strikethrough_24"
-                    app:tint="@color/icon" />
+                    app:tint="@color/icon"
+                    android:contentDescription="@string/strikethrough_icon"/>
             </LinearLayout>
 
             <ImageView
@@ -82,7 +90,7 @@
                 android:layout_height="@dimen/_20sdp"
                 android:layout_marginEnd="@dimen/_10sdp"
                 android:background="@drawable/background_done_button"
-                android:contentDescription="@string/app_name"
+                android:contentDescription="@string/save_button"
                 android:padding="@dimen/_4sdp"
                 android:src="@drawable/ic_check_24"
                 app:layout_constraintBottom_toBottomOf="@id/imgBack"
