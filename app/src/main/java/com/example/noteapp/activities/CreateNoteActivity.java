@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -18,6 +19,9 @@ import android.text.Editable;
 import android.text.Spannable;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
+import android.text.style.StrikethroughSpan;
+import android.text.style.StyleSpan;
+import android.text.style.UnderlineSpan;
 import android.text.util.Linkify;
 import android.util.Patterns;
 import android.view.LayoutInflater;
@@ -396,16 +400,6 @@ public class CreateNoteActivity extends AppCompatActivity {
         Toast.makeText(CreateNoteActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_READ_MEDIA_IMAGES && grantResults.length > 0) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                selectImage();
-            else showToast("Permission denied");
-        }
-    }
-
     private String getPathFromUri(Uri imgUri) {
         String path;
         Cursor cursor = getContentResolver().query(imgUri, null, null, null, null);
@@ -418,5 +412,86 @@ public class CreateNoteActivity extends AppCompatActivity {
             cursor.close();
             return path;
         }
+    }
+
+    private void toggleStyle(@NonNull Spannable spannable, int selectionStart, int selectionEnd, int style) {
+        StyleSpanRemover styleSpanRemover = new StyleSpanRemover();
+        boolean isStyleApplied = isStyleAlreadyApplied(spannable, selectionStart, selectionEnd, style);
+
+        if (isStyleApplied) {
+            styleSpanRemover.removeStyle(spannable, selectionStart, selectionEnd, style);
+        } else {
+            spannable.setSpan(new StyleSpan(style), selectionStart, selectionEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+
+    private boolean isStyleAlreadyApplied(@NonNull Spannable spannable, int selectionStart, int selectionEnd, int style) {
+        StyleSpan[] styleSpans = spannable.getSpans(selectionStart, selectionEnd, StyleSpan.class);
+
+        for (StyleSpan styleSpan : styleSpans) {
+            if (styleSpan.getStyle() == style) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void toggleUnderlined(@NonNull Spannable spannable, int selectionStart, int selectionEnd) {
+        StyleSpanRemover styleSpanRemover = new StyleSpanRemover();
+        boolean isUnderlinedAlreadyApplied = spannable.getSpans(selectionStart, selectionEnd, UnderlineSpan.class).length > 0;
+
+        if (isUnderlinedAlreadyApplied)
+            styleSpanRemover.removeOne(spannable, selectionStart, selectionEnd, UnderlineSpan.class);
+        else
+            spannable.setSpan(new UnderlineSpan(), selectionStart, selectionEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    private void toggleStrikethrough(@NonNull Spannable spannable, int selectionStart, int selectionEnd) {
+        StyleSpanRemover styleSpanRemover = new StyleSpanRemover();
+        boolean isStrikethroughAlreadyApplied = spannable.getSpans(selectionStart, selectionEnd, StrikethroughSpan.class).length > 0;
+
+        if (isStrikethroughAlreadyApplied)
+            styleSpanRemover.removeOne(spannable, selectionStart, selectionEnd, StrikethroughSpan.class);
+        else
+            spannable.setSpan(new StrikethroughSpan(), selectionStart, selectionEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_READ_MEDIA_IMAGES && grantResults.length > 0) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                selectImage();
+            else showToast("Permission denied");
+        }
+    }
+
+    public void onBoldTextIconClicked(View view) {
+        int selectionStart = noteContent.getSelectionStart();
+        int selectionEnd = noteContent.getSelectionEnd();
+        Spannable spannable = noteContent.getText();
+        toggleStyle(spannable, selectionStart, selectionEnd, Typeface.BOLD);
+    }
+
+    public void onItalicTextIconClicked(View view) {
+        int selectionStart = noteContent.getSelectionStart();
+        int selectionEnd = noteContent.getSelectionEnd();
+        Spannable spannable = noteContent.getText();
+        toggleStyle(spannable, selectionStart, selectionEnd, Typeface.ITALIC);
+    }
+
+    public void onUnderlinedTextIconClicked(View view) {
+        int selectionStart = noteContent.getSelectionStart();
+        int selectionEnd = noteContent.getSelectionEnd();
+        Spannable spannable = noteContent.getText();
+        toggleUnderlined(spannable, selectionStart, selectionEnd);
+    }
+
+    public void onStrikethroughIconClicked(View view) {
+        int selectionStart = noteContent.getSelectionStart();
+        int selectionEnd = noteContent.getSelectionEnd();
+        Spannable spannable = noteContent.getText();
+        toggleStrikethrough(spannable, selectionStart, selectionEnd);
     }
 }
