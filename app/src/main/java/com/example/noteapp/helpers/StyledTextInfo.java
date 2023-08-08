@@ -2,6 +2,18 @@ package com.example.noteapp.helpers;
 
 import androidx.annotation.NonNull;
 
+/**
+ * This class is used to store the information of the styled text inside the EditText<br>
+ * An object of this class will represent the styled segment of the EditText and will have the following attributes<br>
+ * <pre>
+ * <b>spanStart</b> - the start indices of the styled segment
+ * <b>spanEnd</b> - the end indices of the styled segment
+ * <b>isBold</b> - indicate if the segment with {@code spanStart} and {@code spanEnd} is formatted with Bold
+ * <b>isItalic</b> - indicate if the segment with {@code spanStart} and {@code spanEnd} is formatted with Italic
+ * <b>isUnderlined</b> - indicate if the segment with {@code spanStart} and {@code spanEnd} is formatted with Underline
+ * <b>isStrikethrough</b> - indicate if the segment with {@code spanStart} and {@code spanEnd} is formatted with Strikethrough
+ * </pre>
+ */
 public class StyledTextInfo {
     private final int spanStart, spanEnd;
     private boolean isBold, isItalic, isUnderlined, isStrikethrough;

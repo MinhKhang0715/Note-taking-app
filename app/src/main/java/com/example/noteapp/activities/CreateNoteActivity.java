@@ -36,6 +36,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -183,6 +184,30 @@ public class CreateNoteActivity extends AppCompatActivity {
             }
         });
 
+        //This code is used to automatically increase the height of the EditText so that the
+        //difference between its height and the height of its content is 30 lines
+        final int maxVisibleLines = noteContent.getMaxLines();
+        final int heightDiffLines = 30;
+        noteContent.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            int currentVisibleLines = noteContent.getLineCount();
+            int totalLines = noteContent.getLineCount();
+
+            // Adjust for any extra lines beyond the maximum visible lines
+            if (totalLines > maxVisibleLines)
+                currentVisibleLines = maxVisibleLines;
+
+            // Compute the difference between the current number of visible lines and the total number of lines
+            int lineDiff = totalLines - currentVisibleLines;
+
+            // Check if the difference is within the desired range
+            if (lineDiff >= 0 && lineDiff <= heightDiffLines) {
+                // Calculate the new height of the EditText
+                int lineHeight = noteContent.getLineHeight();
+                int newHeight = lineHeight * (currentVisibleLines + heightDiffLines - lineDiff);
+                noteContent.setHeight(newHeight);
+            }
+        });
+
         initAndShowNoteOptions();
         setNoteColor();
     }
@@ -227,7 +252,7 @@ public class CreateNoteActivity extends AppCompatActivity {
                     toggleUnderlined(noteContent.getText(), startIndex, endIndex);
                 if (jsonObject.getBoolean("isStrikethrough"))
                     toggleStrikethrough(noteContent.getText(), startIndex, endIndex);
-             }
+            }
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
@@ -284,38 +309,29 @@ public class CreateNoteActivity extends AppCompatActivity {
             boolean isItalic = characterStyle instanceof StyleSpan && ((StyleSpan) characterStyle).getStyle() == Typeface.ITALIC;
             boolean isUnderline = characterStyle instanceof UnderlineSpan;
             boolean isStrikethrough = characterStyle instanceof StrikethroughSpan;
-
-            StyledTextInfo styledTextInfo = new StyledTextInfo(spanStart, spanEnd, isBold, isItalic, isUnderline, isStrikethrough);
-            styledTextInfos.add(styledTextInfo);
-        }
-
-        List<StyledTextInfo> desiredList = new ArrayList<>();
-        for (StyledTextInfo obj : styledTextInfos) {
-            int spanStart = obj.getSpanStart();
-            int spanEnd = obj.getSpanEnd();
-            boolean isBold = obj.isBold();
-            boolean isItalic = obj.isItalic();
-            boolean isUnderlined = obj.isUnderlined();
-            boolean isStrikethrough = obj.isStrikethrough();
-
-            // Find the corresponding object in the desired list
-            StyledTextInfo desiredObj = findObject(desiredList, spanStart, spanEnd);
-
-            // Update the properties of the desired object
-            if (desiredObj == null) {
-                desiredList.add(new StyledTextInfo(spanStart, spanEnd, isBold, isItalic, isUnderlined, isStrikethrough));
-            } else {
-                desiredObj.setBold(desiredObj.isBold() || isBold);
-                desiredObj.setItalic(desiredObj.isItalic() || isItalic);
-                desiredObj.setUnderlined(desiredObj.isUnderlined() || isUnderlined);
-                desiredObj.setStrikethrough(desiredObj.isStrikethrough() || isStrikethrough);
+            StyledTextInfo info = findObject(spanStart, spanEnd, styledTextInfos);
+            if (info == null)
+                styledTextInfos.add(new StyledTextInfo(spanStart, spanEnd, isBold, isItalic, isUnderline, isStrikethrough));
+            else {
+                info.setBold(info.isBold() || isBold);
+                info.setItalic(info.isItalic() || isItalic);
+                info.setUnderlined(info.isUnderlined() || isUnderline);
+                info.setStrikethrough(info.isStrikethrough() || isStrikethrough);
             }
         }
-
-        return desiredList;
+        return styledTextInfos;
     }
 
-    private static StyledTextInfo findObject(List<StyledTextInfo> list, int spanStart, int spanEnd) {
+    /**
+     * @param spanStart the spanStart property of the tested {@code StyledTextInfo} object
+     * @param spanEnd   the spanEnd property of the tested {@code StyledTextInfo} object
+     * @param list      the list of {@code StyledTextInfo} objects
+     * @return {@code null} if the StyleTextInfo object with the properties {@code spanStart} and {@code spanEnd}
+     * doesn't exist in the {@code list}, return {@code nonnull} otherwise
+     * @see com.example.noteapp.helpers.StyledTextInfo
+     */
+    @Nullable
+    private static StyledTextInfo findObject(int spanStart, int spanEnd, @NonNull List<StyledTextInfo> list) {
         for (StyledTextInfo obj : list) {
             if (obj.getSpanStart() == spanStart && obj.getSpanEnd() == spanEnd)
                 return obj;
