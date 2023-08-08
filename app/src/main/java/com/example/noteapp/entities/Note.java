@@ -33,6 +33,9 @@ public class Note implements Serializable {
     @ColumnInfo(name = "web_link")
     private String webLink;
 
+    @ColumnInfo(name = "styled_segments")
+    private String styledSegments;
+
     public int getId() {
         return id;
     }
@@ -95,6 +98,14 @@ public class Note implements Serializable {
 
     public void setWebLink(String webLink) {
         this.webLink = webLink;
+    }
+
+    public String getStyledSegments() {
+        return styledSegments;
+    }
+
+    public void setStyledSegments(String styledSegments) {
+        this.styledSegments = styledSegments;
     }
 
     @NonNull

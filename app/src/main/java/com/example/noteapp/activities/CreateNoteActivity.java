@@ -19,6 +19,7 @@ import android.text.Editable;
 import android.text.Spannable;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
+import android.text.style.CharacterStyle;
 import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
@@ -43,11 +44,19 @@ import androidx.core.content.ContextCompat;
 import com.example.noteapp.R;
 import com.example.noteapp.database.NoteDatabase;
 import com.example.noteapp.entities.Note;
+import com.example.noteapp.helpers.StyledTextInfo;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -160,7 +169,8 @@ public class CreateNoteActivity extends AppCompatActivity {
 
         noteContent.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -180,13 +190,14 @@ public class CreateNoteActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (deleteNoteDialog != null ) deleteNoteDialog.dismiss();
+        if (deleteNoteDialog != null) deleteNoteDialog.dismiss();
     }
 
     private void setViewOrUpdateNote() {
         noteTitle.setText(fromMainActivityNote.getTitle());
         noteSubtitle.setText(fromMainActivityNote.getSubtitle());
         noteContent.setText(fromMainActivityNote.getNoteContent());
+        setStyles(fromMainActivityNote.getStyledSegments());
         dateTime.setText(fromMainActivityNote.getDateTime());
         if (fromMainActivityNote.getImagePath() != null && !fromMainActivityNote.getImagePath().trim().isEmpty()) {
             noteImage.setImageBitmap(BitmapFactory.decodeFile(fromMainActivityNote.getImagePath()));
@@ -200,7 +211,32 @@ public class CreateNoteActivity extends AppCompatActivity {
         }
     }
 
+    private void setStyles(String input) {
+        try {
+            JSONArray jsonArray = new JSONArray(input);
+            int size = jsonArray.length();
+            for (int i = 0; i < size; i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                int startIndex = jsonObject.getInt("spanStart");
+                int endIndex = jsonObject.getInt("spanEnd");
+                if (jsonObject.getBoolean("isBold"))
+                    toggleStyle(noteContent.getText(), startIndex, endIndex, Typeface.BOLD);
+                if (jsonObject.getBoolean("isItalic"))
+                    toggleStyle(noteContent.getText(), startIndex, endIndex, Typeface.ITALIC);
+                if (jsonObject.getBoolean("isUnderlined"))
+                    toggleUnderlined(noteContent.getText(), startIndex, endIndex);
+                if (jsonObject.getBoolean("isStrikethrough"))
+                    toggleStrikethrough(noteContent.getText(), startIndex, endIndex);
+             }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void saveNote() {
+        List<StyledTextInfo> styledContent = getStyledContent();
+        String styled = new Gson().toJson(styledContent);
+
         if (noteTitle.getText().toString().trim().isEmpty()) {
             showToast("Note title can't be empty");
             return;
@@ -216,6 +252,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         note.setDateTime(dateTime.getText().toString());
         note.setColor(selectedNoteColor);
         note.setImagePath(selectedImagePath);
+        note.setStyledSegments(styled);
 
         if (layoutURL.getVisibility() == View.VISIBLE)
             note.setWebLink(mainURL.getText().toString());
@@ -233,6 +270,57 @@ public class CreateNoteActivity extends AppCompatActivity {
                 finish();
             });
         });
+    }
+
+    private List<StyledTextInfo> getStyledContent() {
+        Spannable spannable = noteContent.getText();
+        CharacterStyle[] characterStyles = spannable.getSpans(0, noteContent.getText().length(), CharacterStyle.class);
+        List<StyledTextInfo> styledTextInfos = new ArrayList<>();
+        for (CharacterStyle characterStyle : characterStyles) {
+            int spanStart = spannable.getSpanStart(characterStyle);
+            int spanEnd = spannable.getSpanEnd(characterStyle);
+
+            boolean isBold = characterStyle instanceof StyleSpan && ((StyleSpan) characterStyle).getStyle() == Typeface.BOLD;
+            boolean isItalic = characterStyle instanceof StyleSpan && ((StyleSpan) characterStyle).getStyle() == Typeface.ITALIC;
+            boolean isUnderline = characterStyle instanceof UnderlineSpan;
+            boolean isStrikethrough = characterStyle instanceof StrikethroughSpan;
+
+            StyledTextInfo styledTextInfo = new StyledTextInfo(spanStart, spanEnd, isBold, isItalic, isUnderline, isStrikethrough);
+            styledTextInfos.add(styledTextInfo);
+        }
+
+        List<StyledTextInfo> desiredList = new ArrayList<>();
+        for (StyledTextInfo obj : styledTextInfos) {
+            int spanStart = obj.getSpanStart();
+            int spanEnd = obj.getSpanEnd();
+            boolean isBold = obj.isBold();
+            boolean isItalic = obj.isItalic();
+            boolean isUnderlined = obj.isUnderlined();
+            boolean isStrikethrough = obj.isStrikethrough();
+
+            // Find the corresponding object in the desired list
+            StyledTextInfo desiredObj = findObject(desiredList, spanStart, spanEnd);
+
+            // Update the properties of the desired object
+            if (desiredObj == null) {
+                desiredList.add(new StyledTextInfo(spanStart, spanEnd, isBold, isItalic, isUnderlined, isStrikethrough));
+            } else {
+                desiredObj.setBold(desiredObj.isBold() || isBold);
+                desiredObj.setItalic(desiredObj.isItalic() || isItalic);
+                desiredObj.setUnderlined(desiredObj.isUnderlined() || isUnderlined);
+                desiredObj.setStrikethrough(desiredObj.isStrikethrough() || isStrikethrough);
+            }
+        }
+
+        return desiredList;
+    }
+
+    private static StyledTextInfo findObject(List<StyledTextInfo> list, int spanStart, int spanEnd) {
+        for (StyledTextInfo obj : list) {
+            if (obj.getSpanStart() == spanStart && obj.getSpanEnd() == spanEnd)
+                return obj;
+        }
+        return null;
     }
 
     //    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
