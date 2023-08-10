@@ -1,9 +1,8 @@
-package com.example.noteapp.activities;
+package com.example.noteapp.ui.activities;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -12,8 +11,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.Spannable;
@@ -43,9 +40,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.noteapp.R;
-import com.example.noteapp.database.NoteDatabase;
-import com.example.noteapp.entities.Note;
+import com.example.noteapp.data.entities.Note;
+import com.example.noteapp.helpers.StyleSpanRemover;
 import com.example.noteapp.helpers.StyledTextInfo;
+import com.example.noteapp.helpers.Utils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.gson.Gson;
 
@@ -59,9 +57,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class CreateNoteActivity extends AppCompatActivity {
 
@@ -90,7 +85,7 @@ public class CreateNoteActivity extends AppCompatActivity {
                                 noteImage.setImageBitmap(bitmap);
                                 noteImage.setVisibility(View.VISIBLE);
                                 findViewById(R.id.removeImage).setVisibility(View.VISIBLE);
-                                selectedImagePath = getPathFromUri(selectedImageUri);
+                                selectedImagePath = Utils.getPathFromUri(selectedImageUri, getContentResolver());
                             } catch (Exception e) {
                                 showToast(e.getMessage());
                             }
@@ -170,8 +165,7 @@ public class CreateNoteActivity extends AppCompatActivity {
 
         noteContent.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -261,40 +255,34 @@ public class CreateNoteActivity extends AppCompatActivity {
     private void saveNote() {
         List<StyledTextInfo> styledContent = getStyledContent();
         String styled = new Gson().toJson(styledContent);
+        String title = noteTitle.getText().toString().trim();
+        String subtitle = noteSubtitle.getText().toString().trim();
+        String content = noteContent.getText().toString();
 
-        if (noteTitle.getText().toString().trim().isEmpty()) {
+        if (title.isEmpty()) {
             showToast("Note title can't be empty");
             return;
-        } else if (noteSubtitle.getText().toString().trim().isEmpty() && noteContent.getText().toString().trim().isEmpty()) {
+        } else if (subtitle.isEmpty() && content.trim().isEmpty()) {
             showToast("Note subtitle can't be empty");
             return;
         }
 
-        final Note note = new Note();
-        note.setTitle(noteTitle.getText().toString().trim());
-        note.setSubtitle(noteSubtitle.getText().toString().trim());
-        note.setNoteContent(noteContent.getText().toString());
-        note.setDateTime(dateTime.getText().toString());
-        note.setColor(selectedNoteColor);
-        note.setImagePath(selectedImagePath);
-        note.setStyledSegments(styled);
-
+        final Note note = new Note(title, subtitle, dateTime.getText().toString(), content, selectedImagePath, selectedNoteColor, styled);
         if (layoutURL.getVisibility() == View.VISIBLE)
             note.setWebLink(mainURL.getText().toString());
+        else note.setWebLink("");
 
-        if (fromMainActivityNote != null)
+        if (fromMainActivityNote != null) {
             note.setId(fromMainActivityNote.getId());
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
-        executor.execute(() -> {
-            NoteDatabase.getInstance(getApplicationContext()).noteDAO().insertNote(note);
-            handler.post(() -> {
-                Intent intent = new Intent();
-                setResult(RESULT_OK, intent);
-                finish();
-            });
-        });
+            Intent intent = new Intent().putExtra("isUpdateNote", true)
+                    .putExtra("noteToUpdate", note);
+            setResult(RESULT_OK, intent);
+            finish();
+        } else {
+            Intent intent = new Intent().putExtra("note", note);
+            setResult(RESULT_OK, intent);
+            finish();
+        }
     }
 
     private List<StyledTextInfo> getStyledContent() {
@@ -479,17 +467,11 @@ public class CreateNoteActivity extends AppCompatActivity {
 
             deleteNoteDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> deleteNoteDialog.dismiss());
             deleteNoteDialogView.findViewById(R.id.btnDelete).setOnClickListener(view -> {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                Handler handler = new Handler(Objects.requireNonNull(Looper.myLooper()));
-                executor.execute(() -> {
-                    NoteDatabase.getInstance(getApplicationContext()).noteDAO().deleteNote(fromMainActivityNote);
-                    handler.post(() -> {
-                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                        intent.putExtra("isNoteDeleted", true);
-                        setResult(RESULT_OK, intent);
-                        finish();
-                    });
-                });
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class)
+                        .putExtra("isNoteDeleted", true)
+                        .putExtra("noteToDelete", fromMainActivityNote);
+                setResult(RESULT_OK, intent);
+                finish();
             });
         }
         deleteNoteDialog.show();
@@ -504,19 +486,6 @@ public class CreateNoteActivity extends AppCompatActivity {
         Toast.makeText(CreateNoteActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
-    private String getPathFromUri(Uri imgUri) {
-        String path;
-        Cursor cursor = getContentResolver().query(imgUri, null, null, null, null);
-        if (cursor == null)
-            return imgUri.getPath();
-        else {
-            cursor.moveToFirst();
-            int index = cursor.getColumnIndex("_data");
-            path = cursor.getString(index);
-            cursor.close();
-            return path;
-        }
-    }
 
     private void toggleStyle(@NonNull Spannable spannable, int selectionStart, int selectionEnd, int style) {
         StyleSpanRemover styleSpanRemover = new StyleSpanRemover();

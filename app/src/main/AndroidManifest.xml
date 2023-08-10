@@ -18,12 +18,12 @@
         android:theme="@style/DarkTheme.NoteApp"
         tools:targetApi="31">
         <activity
-            android:name=".activities.CreateNoteActivity"
+            android:name=".ui.activities.CreateNoteActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan"
             android:exported="false" />
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".ui.activities.MainActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateHidden"
             android:exported="true">
