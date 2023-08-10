@@ -1,5 +1,6 @@
-package com.example.noteapp.adapters;
+package com.example.noteapp.ui.adapters;
 
+import android.annotation.SuppressLint;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -14,44 +15,63 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.noteapp.R;
-import com.example.noteapp.activities.MainActivity;
-import com.example.noteapp.entities.Note;
+import com.example.noteapp.ui.activities.MainActivity;
+import com.example.noteapp.data.entities.Note;
 import com.example.noteapp.listeners.NoteListener;
 import com.makeramen.roundedimageview.RoundedImageView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHolder> {
-    private List<Note> listOfNotes;
-    private final List<Note>  intermediateListOfNotes;
+public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder> {
+    private List<Note>  originalNotes;
     private final NoteListener noteListener;
     public final List<NoteViewHolder> selectedNoteViewHolderList = new ArrayList<>();
     public boolean isSelectedAll = false;
     public volatile boolean isLongClickConsumed = false;
 
-    public NotesAdapter(List<Note> listOfNotes, NoteListener noteListener) {
-        this.listOfNotes = listOfNotes;
+    private static final DiffUtil.ItemCallback<Note> diffCallback = new DiffUtil.ItemCallback<Note>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull Note oldItem, @NonNull Note newItem) {
+            return oldItem.getId() == newItem.getId();
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull Note oldItem, @NonNull Note newItem) {
+            return oldItem.getTitle().equals(newItem.getTitle()) &&
+                    oldItem.getSubtitle().equals(newItem.getSubtitle()) &&
+                    oldItem.getNoteContent().equals(newItem.getNoteContent()) &&
+                    oldItem.getColor().equals(newItem.getColor()) &&
+                    oldItem.getImagePath().equals(newItem.getImagePath()) &&
+                    oldItem.getDateTime().equals(newItem.getDateTime()) &&
+                    oldItem.getStyledSegments().equals(newItem.getStyledSegments()) &&
+                    oldItem.getWebLink().equals(newItem.getWebLink());
+        }
+    };
+
+    public NotesAdapter(NoteListener noteListener) {
+        super(diffCallback);
         this.noteListener = noteListener;
-        intermediateListOfNotes = listOfNotes;
     }
 
     public void setSearch(@NonNull final String searchKeyword) {
-        if (searchKeyword.trim().isEmpty()) listOfNotes = intermediateListOfNotes;
+        if (searchKeyword.trim().isEmpty()) submitList(originalNotes);
         else {
-            List<Note> temp = new ArrayList<>();
-            for (Note note : intermediateListOfNotes) {
+            List<Note> filteredNotes = new ArrayList<>();
+            for (Note note : originalNotes) {
                 if (note.getTitle().toLowerCase().contains(searchKeyword.toLowerCase()) ||
                         note.getSubtitle().toLowerCase().contains(searchKeyword.toLowerCase()) ||
                         note.getNoteContent().toLowerCase().contains(searchKeyword.toLowerCase()))
-                    temp.add(note);
+                    filteredNotes.add(note);
             }
-            listOfNotes = temp;
+            submitList(filteredNotes);
         }
-        notifyDataSetChanged();
     }
 
     @NonNull
@@ -68,7 +88,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
     @Override
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
-        holder.setNote(listOfNotes.get(position));
+        holder.setNote(getItem(position));
 
         if (MainActivity.isEventCheckbox || MainActivity.isCancelButtonClicked)
             holder.isSelected = isSelectedAll;
@@ -92,7 +112,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
                 notifyItemChanged(position, holder.isSelected);
                 MainActivity.setDeleteMessage();
             }
-            else noteListener.onNoteClicked(listOfNotes.get(position), position);
+            else noteListener.onNoteClicked(getItem(position), position);
         });
 
         holder.noteContainer.setOnLongClickListener(view -> {
@@ -107,7 +127,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
     @Override
     public int getItemCount() {
-        return listOfNotes.size();
+        return getCurrentList().size();
     }
 
     @Override
@@ -115,27 +135,27 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
         return position;
     }
 
-    public void removeSelectedNotes() {
-        for (NoteViewHolder noteViewHolder : selectedNoteViewHolderList) {
-            noteViewHolder.setSelected(false);
-            listOfNotes.remove(noteViewHolder.note);
-        }
-        notifyDataSetChanged();
+    public void setOriginalNotes(List<Note> notes) {
+        originalNotes = notes;
     }
 
     public List<NoteViewHolder> getSelectedNoteViewHolderList() {
         return selectedNoteViewHolderList;
     }
 
+    public void clearSelectedNoteViewHolderList() {
+        selectedNoteViewHolderList.clear();
+    }
+
     public void setSelectAll() {
         isSelectedAll = true;
-        notifyDataSetChanged();
+        notifyItemRangeChanged(0, getItemCount());
         MainActivity.setDeleteMessage();
     }
 
     public void unselectAll() {
         isSelectedAll = false;
-        notifyDataSetChanged();
+        notifyItemRangeChanged(0, getItemCount());
         selectedNoteViewHolderList.clear();
         MainActivity.setDeleteMessage();
     }

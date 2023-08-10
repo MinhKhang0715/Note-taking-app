@@ -1,4 +1,4 @@
-package com.example.noteapp.database;
+package com.example.noteapp.data.database;
 
 import android.content.Context;
 
@@ -6,8 +6,8 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-import com.example.noteapp.dao.NoteDAO;
-import com.example.noteapp.entities.Note;
+import com.example.noteapp.data.dao.NoteDAO;
+import com.example.noteapp.data.entities.Note;
 
 @Database(entities = Note.class, version = 1, exportSchema = false)
 public abstract class NoteDatabase extends RoomDatabase {
@@ -17,10 +17,10 @@ public abstract class NoteDatabase extends RoomDatabase {
     public static synchronized NoteDatabase getInstance(Context context) {
         if (noteDatabase == null)
             noteDatabase = Room.databaseBuilder(
-                    context,
+                    context.getApplicationContext(),
                     NoteDatabase.class,
                     "note_db"
-            ).build();
+            ).fallbackToDestructiveMigration().build();
         return noteDatabase;
     }
 

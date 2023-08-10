@@ -1,10 +1,9 @@
-package com.example.noteapp.activities;
+package com.example.noteapp.ui.activities;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -30,14 +29,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.example.noteapp.R;
-import com.example.noteapp.adapters.NotesAdapter;
-import com.example.noteapp.database.NoteDatabase;
-import com.example.noteapp.entities.Note;
+import com.example.noteapp.data.entities.Note;
+import com.example.noteapp.helpers.Utils;
 import com.example.noteapp.listeners.NoteListener;
+import com.example.noteapp.ui.adapters.NotesAdapter;
+import com.example.noteapp.ui.viewmodels.NoteViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,16 +46,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity implements NoteListener {
-    private final static int ACTION_ADD_NOTE = 1;
-    private final static int ACTION_VIEW_NOTES = 2;
-    private final static int ACTION_UPDATE_NOTE = 3;
     private final static int REQUEST_READ_IMAGES_CODE = 4;
-    private RecyclerView notesView;
-    private List<Note> noteList;
     private static NotesAdapter notesAdapter;
     private AlertDialog addURLDialog;
     private static ConstraintLayout layoutDeleteOptions;
     private int noteClickedPosition;
+    private NoteViewModel noteViewModel;
+    private static int numberOfSelectedNotes;
+
+    private ActivityResultLauncher<Intent> createNoteActivity;
+    private ActivityResultLauncher<Intent> selectImageActivity;
+    private ActivityResultLauncher<Intent> viewOrUpdateNoteActivity;
 
     /**
      * When the user click on the checkbox, it means that they want to select/unselect all notes<br>
@@ -67,44 +69,6 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
      * When the user click on it, unselect all the notes and hide the layout
      */
     public static boolean isCancelButtonClicked = false;
-    private static int numberOfSelectedNotes;
-
-    private final ActivityResultLauncher<Intent> createNoteActivity = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK)
-                    getNotes(ACTION_ADD_NOTE, false);
-            }
-    );
-
-    private final ActivityResultLauncher<Intent> selectImageActivity = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    Intent intent = result.getData();
-                    if (intent != null) {
-                        Uri selectedImageUri = intent.getData();
-                        if (selectedImageUri != null) {
-                            createNoteActivity.launch(new Intent(MainActivity.this, CreateNoteActivity.class)
-                                    .putExtra("isQuickAction", true)
-                                    .putExtra("quickActionType", "image")
-                                    .putExtra("imgPath", getPathFromUri(selectedImageUri)));
-                        }
-                    }
-                }
-            }
-    );
-
-    private final ActivityResultLauncher<Intent> viewOrUpdateNoteActivity = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    Intent resultIntent = result.getData();
-                    if (resultIntent != null)
-                        getNotes(ACTION_UPDATE_NOTE, resultIntent.getBooleanExtra("isNoteDeleted", false));
-                }
-            }
-    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,16 +76,74 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         setContentView(R.layout.activity_main);
         ImageView addNoteBtn = findViewById(R.id.imgAddNoteMain);
 
-        addNoteBtn.setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
-        notesView = findViewById(R.id.noteRecyclerView);
+        RecyclerView notesView = findViewById(R.id.noteRecyclerView);
         notesView.setLayoutManager(
                 new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         );
-        noteList = new ArrayList<>();
-        notesAdapter = new NotesAdapter(noteList, this);
+        notesAdapter = new NotesAdapter(/*noteList,*/ this);
         notesView.setAdapter(notesAdapter);
-        getNotes(ACTION_VIEW_NOTES, false);
 
+        noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
+        noteViewModel.getAllNotes().observe(this, notes -> {
+            notesAdapter.submitList(notes);
+            notesAdapter.setOriginalNotes(notes);
+        });
+
+        createNoteActivity = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            Note noteToSave = (Note) data.getSerializableExtra("note");
+                            noteViewModel.insert(noteToSave);
+                            showToast("Created note");
+                        }
+                    }
+                }
+        );
+
+        selectImageActivity = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent intent = result.getData();
+                        if (intent != null) {
+                            Uri selectedImageUri = intent.getData();
+                            if (selectedImageUri != null) {
+                                createNoteActivity.launch(new Intent(MainActivity.this, CreateNoteActivity.class)
+                                        .putExtra("isQuickAction", true)
+                                        .putExtra("quickActionType", "image")
+                                        .putExtra("imgPath", Utils.getPathFromUri(selectedImageUri, getContentResolver())));
+                            }
+                        }
+                    }
+                }
+        );
+
+        viewOrUpdateNoteActivity = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent resultIntent = result.getData();
+                        if (resultIntent != null) {
+                            if (resultIntent.getBooleanExtra("isNoteDeleted", false)) {
+                                Note noteToDelete = (Note) resultIntent.getSerializableExtra("noteToDelete");
+                                noteViewModel.delete(noteToDelete);
+                                notesAdapter.notifyItemRemoved(noteClickedPosition);
+                                showToast("Deleted note");
+                            } else if (resultIntent.getBooleanExtra("isUpdateNote", false)) {
+                                Note noteToUpdate = (Note) resultIntent.getSerializableExtra("noteToUpdate");
+                                noteViewModel.insert(noteToUpdate);
+                                notesAdapter.notifyItemChanged(noteClickedPosition);
+                                showToast("Updated note");
+                            }
+                        }
+                    }
+                }
+        );
+
+        addNoteBtn.setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
         findViewById(R.id.imgAddNote).setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
 
         findViewById(R.id.imgAddImage).setOnClickListener(view -> {
@@ -150,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                if (noteList.size() != 0)
+                if (notesAdapter.getCurrentList().size() != 0)
                     notesAdapter.setSearch(editable.toString());
             }
         });
@@ -234,49 +256,6 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         }, 20));
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    private void getNotes(int actionCode, boolean isNoteDeleted) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
-        executor.execute(() -> {
-            List<Note> noteListFromDB = NoteDatabase.getInstance(getApplicationContext()).noteDAO().getAllNotes();
-            handler.post(() -> {
-                if (actionCode == ACTION_VIEW_NOTES) {
-                    noteList.addAll(noteListFromDB);
-                    notesAdapter.notifyDataSetChanged();
-                } else if (actionCode == ACTION_ADD_NOTE) {
-                    noteList.add(0, noteListFromDB.get(0));
-                    notesAdapter.notifyItemInserted(0);
-                    notesView.smoothScrollToPosition(0);
-                } else if (actionCode == ACTION_UPDATE_NOTE) {
-                    noteList.remove(noteClickedPosition);
-                    if (isNoteDeleted) {
-                        notesAdapter.notifyItemRemoved(noteClickedPosition);
-                        showToast("Note deleted");
-                    } else {
-                        noteList.add(noteClickedPosition, noteListFromDB.get(noteClickedPosition));
-                        notesAdapter.notifyItemChanged(noteClickedPosition);
-                        showToast("Note updated");
-                    }
-                }
-            });
-        });
-    }
-
-    private String getPathFromUri(Uri imgUri) {
-        String path;
-        Cursor cursor = getContentResolver().query(imgUri, null, null, null, null);
-        if (cursor == null)
-            return imgUri.getPath();
-        else {
-            cursor.moveToFirst();
-            int index = cursor.getColumnIndex("_data");
-            path = cursor.getString(index);
-            cursor.close();
-            return path;
-        }
-    }
-
     private void showAddURLDialog() {
         if (addURLDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -329,31 +308,21 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                         (numberOfSelectedNotes + " note")
                 ));
         deleteNoteDialogView.findViewById(R.id.btnDelete).setOnClickListener(view -> {
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
-            Handler handler = new Handler(Looper.getMainLooper());
-            executorService.execute(() -> {
-                if (numberOfSelectedNotes == notesAdapter.getItemCount()) {
-                    NoteDatabase.getInstance(getApplicationContext()).noteDAO().deleteAllNotes();
-                    noteList.clear();
-                }
-                else {
-                    List<Integer> noteIds = new ArrayList<>();
-                    List<NotesAdapter.NoteViewHolder> noteViewHolderList = notesAdapter.getSelectedNoteViewHolderList();
-                    for (NotesAdapter.NoteViewHolder noteViewHolder : noteViewHolderList) {
-                        noteIds.add(noteViewHolder.getNote().getId()); // collect all selected note's ids to remove
-                        noteList.remove(noteViewHolder.getNote()); // make it in sync with NoteAdapter.listOfNotes
-                    }
-                    NoteDatabase.getInstance(getApplicationContext()).noteDAO().deleteNotesByIdList(noteIds);
-                }
-                handler.post(() -> {
-                    notesAdapter.removeSelectedNotes();
-                    notesAdapter.selectedNoteViewHolderList.clear();
-                    numberOfSelectedNotes = 0;
-                    notesAdapter.isLongClickConsumed = false;
-                    layoutDeleteOptions.setVisibility(View.GONE);
-                    deleteNoteDialog.dismiss();
-                });
-            });
+            if (numberOfSelectedNotes == notesAdapter.getItemCount())
+                noteViewModel.deleteAllNotes();
+            else {
+                List<Integer> noteIds = new ArrayList<>();
+                List<NotesAdapter.NoteViewHolder> noteViewHolderList = notesAdapter.getSelectedNoteViewHolderList();
+                for (NotesAdapter.NoteViewHolder noteViewHolder : noteViewHolderList)
+                    noteIds.add(noteViewHolder.getNote().getId()); // collect all selected note's ids to remove
+                noteViewModel.deleteByIds(noteIds);
+            }
+            notesAdapter.clearSelectedNoteViewHolderList();
+            numberOfSelectedNotes = 0;
+            notesAdapter.isLongClickConsumed = false;
+            deleteNoteDialog.dismiss();
+            layoutDeleteOptions.setVisibility(View.GONE);
+
         });
         deleteNoteDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> deleteNoteDialog.dismiss());
         deleteNoteDialog.show();
