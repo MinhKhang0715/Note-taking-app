@@ -1,4 +1,4 @@
-package com.example.noteapp.activities;
+package com.example.noteapp.helpers;
 
 import android.text.Spannable;
 import android.text.style.CharacterStyle;

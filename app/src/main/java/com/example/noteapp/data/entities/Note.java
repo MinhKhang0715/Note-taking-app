@@ -1,4 +1,4 @@
-package com.example.noteapp.entities;
+package com.example.noteapp.data.entities;
 
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
@@ -35,6 +35,28 @@ public class Note implements Serializable {
 
     @ColumnInfo(name = "styled_segments")
     private String styledSegments;
+
+    public Note() {
+        id = 0;
+        title = "";
+        subtitle = "";
+        dateTime = "";
+        noteContent = "";
+        imagePath = "";
+        color = "";
+        styledSegments = "";
+        webLink = "";
+    }
+
+    public Note(String title, String subtitle, String dateTime, String noteContent, String imagePath, String color, String styledSegments) {
+        this.title = title;
+        this.subtitle = subtitle;
+        this.dateTime = dateTime;
+        this.noteContent = noteContent;
+        this.imagePath = imagePath;
+        this.color = color;
+        this.styledSegments = styledSegments;
+    }
 
     public int getId() {
         return id;
