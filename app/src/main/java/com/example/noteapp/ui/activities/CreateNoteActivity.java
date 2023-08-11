@@ -178,8 +178,8 @@ public class CreateNoteActivity extends AppCompatActivity {
             }
         });
 
-        //This code is used to automatically increase the height of the EditText so that the
-        //difference between its height and the height of its content is 30 lines
+        // This code automatically adjusts the height of the EditText to ensure that the difference between
+        // its height and the height of its content is 30 lines.
         final int maxVisibleLines = noteContent.getMaxLines();
         final int heightDiffLines = 30;
         noteContent.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
@@ -301,6 +301,11 @@ public class CreateNoteActivity extends AppCompatActivity {
             if (info == null)
                 styledTextInfos.add(new StyledTextInfo(spanStart, spanEnd, isBold, isItalic, isUnderline, isStrikethrough));
             else {
+                // The array returned by spannable.getSpans contains multiple style objects for a segment (defined by spanStart and spanEnd).
+                // In the else clause, we update an existing object in styledTextInfos. The OR operator is essential
+                // to ensure that all properties of the object are correctly updated, as we cannot determine which specific
+                // boolean variables above is true. The OR operator returns true if any of the arguments is true, preserving
+                // the previous value of the property if it is already true.
                 info.setBold(info.isBold() || isBold);
                 info.setItalic(info.isItalic() || isItalic);
                 info.setUnderlined(info.isUnderlined() || isUnderline);
@@ -314,8 +319,8 @@ public class CreateNoteActivity extends AppCompatActivity {
      * @param spanStart the spanStart property of the tested {@code StyledTextInfo} object
      * @param spanEnd   the spanEnd property of the tested {@code StyledTextInfo} object
      * @param list      the list of {@code StyledTextInfo} objects
-     * @return {@code null} if the StyleTextInfo object with the properties {@code spanStart} and {@code spanEnd}
-     * doesn't exist in the {@code list}, return {@code nonnull} otherwise
+     * @return <b>{@code null}</b> if the {@code StyleTextInfo} object with the properties {@code spanStart} and {@code spanEnd}
+     * doesn't exist in the {@code list}, return <b>{@code nonnull}</b> otherwise
      * @see com.example.noteapp.helpers.StyledTextInfo
      */
     @Nullable
@@ -327,7 +332,6 @@ public class CreateNoteActivity extends AppCompatActivity {
         return null;
     }
 
-    //    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private void initAndShowNoteOptions() {
         LinearLayout noteOptionsLayout = findViewById(R.id.noteOptions);
         BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(noteOptionsLayout);
