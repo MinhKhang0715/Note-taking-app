@@ -1,10 +1,8 @@
 package com.example.noteapp.ui.adapters;
 
-import android.annotation.SuppressLint;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,22 +13,21 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.noteapp.R;
-import com.example.noteapp.ui.activities.MainActivity;
 import com.example.noteapp.data.entities.Note;
 import com.example.noteapp.listeners.NoteListener;
+import com.example.noteapp.ui.activities.MainActivity;
 import com.makeramen.roundedimageview.RoundedImageView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder> {
-    private List<Note>  originalNotes;
+    private List<Note> originalNotes;
     private final NoteListener noteListener;
     public final List<NoteViewHolder> selectedNoteViewHolderList = new ArrayList<>();
     public boolean isSelectedAll = false;
@@ -97,11 +94,9 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
             holder.checkbox.setVisibility(View.VISIBLE);
             if (selectedNoteViewHolderList.contains(holder)) return;
             selectedNoteViewHolderList.add(holder);
-            Log.d("Check holder list", "Size is " + selectedNoteViewHolderList.size());
         } else {
             holder.checkbox.setVisibility(View.GONE);
             selectedNoteViewHolderList.remove(holder);
-            Log.d("Check holder list", "Size is " + selectedNoteViewHolderList.size());
         }
 
         holder.noteContainer.setOnClickListener(view -> {
@@ -111,8 +106,7 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
                 holder.setSelected(!holder.isSelected());
                 notifyItemChanged(position, holder.isSelected);
                 MainActivity.setDeleteMessage();
-            }
-            else noteListener.onNoteClicked(getItem(position), position);
+            } else noteListener.onNoteClicked(getItem(position), position);
         });
 
         holder.noteContainer.setOnLongClickListener(view -> {

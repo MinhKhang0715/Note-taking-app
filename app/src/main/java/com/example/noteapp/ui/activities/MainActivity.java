@@ -237,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
 
     /**
      * Using an executor to run the code after the adapter updated its number of selected notes
-     * (via selectedNoteViewHolderList)<br>
+     * (via {@code selectedNoteViewHolderList})<br>
      * The <b>delay time</b> is set to make sure the code will run <i>after</i>
      * the number of selected notes is updated.
      */
