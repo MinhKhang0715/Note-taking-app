@@ -90,60 +90,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
             notesAdapter.setOriginalNotes(notes);
         });
 
-        createNoteActivity = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK) {
-                        Intent data = result.getData();
-                        if (data != null) {
-                            Note noteToSave = (Note) data.getSerializableExtra("note");
-                            noteViewModel.insert(noteToSave);
-                            isInsertNote = true;
-                            showToast("Created note");
-                        }
-                    }
-                }
-        );
-
-        selectImageActivity = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK) {
-                        Intent intent = result.getData();
-                        if (intent != null) {
-                            Uri selectedImageUri = intent.getData();
-                            if (selectedImageUri != null) {
-                                createNoteActivity.launch(new Intent(MainActivity.this, CreateNoteActivity.class)
-                                        .putExtra("isQuickAction", true)
-                                        .putExtra("quickActionType", "image")
-                                        .putExtra("imgPath", Utils.getPathFromUri(selectedImageUri, getContentResolver())));
-                            }
-                        }
-                    }
-                }
-        );
-
-        viewOrUpdateNoteActivity = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK) {
-                        Intent resultIntent = result.getData();
-                        if (resultIntent != null) {
-                            if (resultIntent.getBooleanExtra("isNoteDeleted", false)) {
-                                Note noteToDelete = (Note) resultIntent.getSerializableExtra("noteToDelete");
-                                noteViewModel.delete(noteToDelete);
-                                notesAdapter.notifyItemRemoved(noteClickedPosition);
-                                showToast("Deleted note");
-                            } else if (resultIntent.getBooleanExtra("isUpdateNote", false)) {
-                                Note noteToUpdate = (Note) resultIntent.getSerializableExtra("noteToUpdate");
-                                noteViewModel.insert(noteToUpdate);
-                                notesAdapter.notifyItemChanged(noteClickedPosition);
-                                showToast("Updated note");
-                            }
-                        }
-                    }
-                }
-        );
+        registerActivities();
 
         addNoteBtn.setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
         findViewById(R.id.imgAddNote).setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
@@ -257,6 +204,63 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                     )
             );
         }, 20));
+    }
+
+    private void registerActivities() {
+        createNoteActivity = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            Note noteToSave = (Note) data.getSerializableExtra("note");
+                            noteViewModel.insert(noteToSave);
+                            isInsertNote = true;
+                            showToast("Created note");
+                        }
+                    }
+                }
+        );
+
+        selectImageActivity = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent intent = result.getData();
+                        if (intent != null) {
+                            Uri selectedImageUri = intent.getData();
+                            if (selectedImageUri != null) {
+                                createNoteActivity.launch(new Intent(MainActivity.this, CreateNoteActivity.class)
+                                        .putExtra("isQuickAction", true)
+                                        .putExtra("quickActionType", "image")
+                                        .putExtra("imgPath", Utils.getPathFromUri(selectedImageUri, getContentResolver())));
+                            }
+                        }
+                    }
+                }
+        );
+
+        viewOrUpdateNoteActivity = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent resultIntent = result.getData();
+                        if (resultIntent != null) {
+                            if (resultIntent.getBooleanExtra("isNoteDeleted", false)) {
+                                Note noteToDelete = (Note) resultIntent.getSerializableExtra("noteToDelete");
+                                noteViewModel.delete(noteToDelete);
+                                notesAdapter.notifyItemRemoved(noteClickedPosition);
+                                showToast("Deleted note");
+                            } else if (resultIntent.getBooleanExtra("isUpdateNote", false)) {
+                                Note noteToUpdate = (Note) resultIntent.getSerializableExtra("noteToUpdate");
+                                noteViewModel.insert(noteToUpdate);
+                                notesAdapter.notifyItemChanged(noteClickedPosition);
+                                showToast("Updated note");
+                            }
+                        }
+                    }
+                }
+        );
     }
 
     private void showAddURLDialog() {
