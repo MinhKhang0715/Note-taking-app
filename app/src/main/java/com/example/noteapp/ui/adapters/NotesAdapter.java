@@ -29,9 +29,9 @@ import java.util.List;
 public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder> {
     private List<Note> originalNotes;
     private final NoteListener noteListener;
-    public final List<NoteViewHolder> selectedNoteViewHolderList = new ArrayList<>();
+    private final List<NoteViewHolder> selectedNoteViewHolderList = new ArrayList<>();
     public boolean isSelectedAll = false;
-    public volatile boolean isLongClickConsumed = false;
+    public boolean isLongClickConsumed = false;
 
     private static final DiffUtil.ItemCallback<Note> diffCallback = new DiffUtil.ItemCallback<Note>() {
         @Override
@@ -43,12 +43,9 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
         public boolean areContentsTheSame(@NonNull Note oldItem, @NonNull Note newItem) {
             return oldItem.getTitle().equals(newItem.getTitle()) &&
                     oldItem.getSubtitle().equals(newItem.getSubtitle()) &&
-                    oldItem.getNoteContent().equals(newItem.getNoteContent()) &&
                     oldItem.getColor().equals(newItem.getColor()) &&
                     oldItem.getImagePath().equals(newItem.getImagePath()) &&
-                    oldItem.getDateTime().equals(newItem.getDateTime()) &&
-                    oldItem.getStyledSegments().equals(newItem.getStyledSegments()) &&
-                    oldItem.getWebLink().equals(newItem.getWebLink());
+                    oldItem.getDateTime().equals(newItem.getDateTime());
         }
     };
 
@@ -87,13 +84,19 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
         holder.setNote(getItem(position));
 
+        if (MainActivity.isInsertNote && holder.isSelected()) {
+            holder.setSelected(false);
+            MainActivity.isInsertNote = false;
+            selectedNoteViewHolderList.remove(holder);
+        }
+
         if (MainActivity.isEventCheckbox || MainActivity.isCancelButtonClicked)
-            holder.isSelected = isSelectedAll;
+            holder.setSelected(isSelectedAll);
 
         if (holder.isSelected()) {
             holder.checkbox.setVisibility(View.VISIBLE);
-            if (selectedNoteViewHolderList.contains(holder)) return;
-            selectedNoteViewHolderList.add(holder);
+            if (!selectedNoteViewHolderList.contains(holder))
+                selectedNoteViewHolderList.add(holder);
         } else {
             holder.checkbox.setVisibility(View.GONE);
             selectedNoteViewHolderList.remove(holder);
@@ -137,20 +140,17 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
         return selectedNoteViewHolderList;
     }
 
-    public void clearSelectedNoteViewHolderList() {
-        selectedNoteViewHolderList.clear();
-    }
-
     public void setSelectAll() {
         isSelectedAll = true;
+        selectedNoteViewHolderList.clear();
         notifyItemRangeChanged(0, getItemCount());
         MainActivity.setDeleteMessage();
     }
 
     public void unselectAll() {
         isSelectedAll = false;
-        notifyItemRangeChanged(0, getItemCount());
         selectedNoteViewHolderList.clear();
+        notifyItemRangeChanged(0, getItemCount());
         MainActivity.setDeleteMessage();
     }
 

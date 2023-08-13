@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
      * When the user click on it, unselect all the notes and hide the layout
      */
     public static boolean isCancelButtonClicked = false;
+    public static boolean isInsertNote = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         notesView.setLayoutManager(
                 new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         );
-        notesAdapter = new NotesAdapter(/*noteList,*/ this);
+        notesAdapter = new NotesAdapter(this);
         notesView.setAdapter(notesAdapter);
 
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
@@ -97,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                         if (data != null) {
                             Note noteToSave = (Note) data.getSerializableExtra("note");
                             noteViewModel.insert(noteToSave);
+                            isInsertNote = true;
                             showToast("Created note");
                         }
                     }
@@ -167,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         inputSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
@@ -317,12 +320,13 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                     noteIds.add(noteViewHolder.getNote().getId()); // collect all selected note's ids to remove
                 noteViewModel.deleteByIds(noteIds);
             }
-            notesAdapter.clearSelectedNoteViewHolderList();
+            notesAdapter.unselectAll();
             numberOfSelectedNotes = 0;
             notesAdapter.isLongClickConsumed = false;
+            ((CheckBox) layoutDeleteOptions.findViewById(R.id.checkbox)).setChecked(false);
+            isEventCheckbox = false;
             deleteNoteDialog.dismiss();
             layoutDeleteOptions.setVisibility(View.GONE);
-
         });
         deleteNoteDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> deleteNoteDialog.dismiss());
         deleteNoteDialog.show();
