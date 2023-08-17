@@ -324,7 +324,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                     noteIds.add(noteViewHolder.getNote().getId()); // collect all selected note's ids to remove
                 noteViewModel.deleteByIds(noteIds);
             }
-            notesAdapter.unselectAll();
+//            notesAdapter.unselectAll();
             numberOfSelectedNotes = 0;
             notesAdapter.isLongClickConsumed = false;
             ((CheckBox) layoutDeleteOptions.findViewById(R.id.checkbox)).setChecked(false);

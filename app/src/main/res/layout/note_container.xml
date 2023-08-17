@@ -33,7 +33,8 @@
             android:layout_marginTop="@dimen/_8sdp"
             android:includeFontPadding="false"
             android:textColor="@color/white"
-            android:textSize="@dimen/_13ssp"/>
+            android:textStyle="bold"
+            android:textSize="@dimen/_14ssp"/>
 
         <TextView
             android:id="@+id/subtitleText"
