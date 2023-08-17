@@ -18,4 +18,27 @@ public class Utils {
             return path;
         }
     }
+
+    /**
+     * The class uses the debounce technique to limit the creation of Toast objects when the user
+     * repeatedly presses a button, typically in cases where important information like a note's title
+     * is missing. This ensures that only a single Toast is shown, even with frequent button presses.
+     */
+    public static class Debounce {
+        private final long debounceTimeMillis;
+        private long lastClickTime;
+
+        public Debounce(long debounceTimeMillis) {
+            this.debounceTimeMillis = debounceTimeMillis;
+        }
+
+        public boolean debounce() {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastClickTime > debounceTimeMillis) {
+                lastClickTime = currentTime;
+                return false;
+            }
+            return true;
+        }
+    }
 }
