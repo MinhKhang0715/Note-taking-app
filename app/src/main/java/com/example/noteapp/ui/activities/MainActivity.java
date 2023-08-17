@@ -264,6 +264,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
     }
 
     private void showAddURLDialog() {
+        Utils.Debounce debounce = new Utils.Debounce(2000);
         if (addURLDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             View addURLDialogView = LayoutInflater.from(this).inflate(
@@ -281,10 +282,14 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
 
             addURLDialogView.findViewById(R.id.btnAdd).setOnClickListener(view -> {
                 String url = inputURL.getText().toString().trim();
-                if (url.isEmpty())
+                if (url.isEmpty()) {
+                    if (debounce.debounce()) return;
                     showToast("Enter your URL");
-                else if (!Patterns.WEB_URL.matcher(url).matches())
+                }
+                else if (!Patterns.WEB_URL.matcher(url).matches()) {
+                    if (debounce.debounce()) return;
                     showToast("Enter a valid URL");
+                }
                 else {
                     addURLDialog.dismiss();
                     createNoteActivity.launch(new Intent(MainActivity.this, CreateNoteActivity.class)
@@ -324,7 +329,6 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                     noteIds.add(noteViewHolder.getNote().getId()); // collect all selected note's ids to remove
                 noteViewModel.deleteByIds(noteIds);
             }
-//            notesAdapter.unselectAll();
             numberOfSelectedNotes = 0;
             notesAdapter.isLongClickConsumed = false;
             ((CheckBox) layoutDeleteOptions.findViewById(R.id.checkbox)).setChecked(false);
