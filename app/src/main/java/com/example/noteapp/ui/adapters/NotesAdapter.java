@@ -84,19 +84,17 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
         holder.setNote(getItem(position));
 
-        if (MainActivity.isInsertNote && holder.isSelected()) {
-            holder.setSelected(false);
-            MainActivity.isInsertNote = false;
-            selectedNoteViewHolderList.remove(holder);
-        }
-
         if (MainActivity.isEventCheckbox || MainActivity.isCancelButtonClicked)
             holder.setSelected(isSelectedAll);
 
-        if (holder.isSelected()) {
-            holder.checkbox.setVisibility(View.VISIBLE);
-            if (!selectedNoteViewHolderList.contains(holder))
-                selectedNoteViewHolderList.add(holder);
+        if (holder.isSelected) {
+            if (!isLongClickConsumed) holder.setSelected(false);
+            holder.checkbox.setVisibility(isLongClickConsumed ? View.VISIBLE : View.GONE);
+            if (isLongClickConsumed) {
+                if (!selectedNoteViewHolderList.contains(holder))
+                    selectedNoteViewHolderList.add(holder);
+            } else
+                selectedNoteViewHolderList.remove(holder);
         } else {
             holder.checkbox.setVisibility(View.GONE);
             selectedNoteViewHolderList.remove(holder);
@@ -106,7 +104,7 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
             if (isLongClickConsumed) { // The long click event is consumed means the user is selecting/unselecting notes
                 MainActivity.isEventCheckbox = false;
                 ((CheckBox) MainActivity.getLayoutDeleteOptions().findViewById(R.id.checkbox)).setChecked(false);
-                holder.setSelected(!holder.isSelected());
+                holder.setSelected(!holder.isSelected);
                 notifyItemChanged(position, holder.isSelected);
                 MainActivity.setDeleteMessage();
             } else noteListener.onNoteClicked(getItem(position), position);
@@ -162,10 +160,6 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
         private final ImageView checkbox;
         private boolean isSelected = false;
         private Note note;
-
-        public boolean isSelected() {
-            return isSelected;
-        }
 
         public void setSelected(boolean selected) {
             isSelected = selected;
