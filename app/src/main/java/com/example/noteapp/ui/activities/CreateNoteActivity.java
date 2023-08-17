@@ -71,6 +71,7 @@ public class CreateNoteActivity extends AppCompatActivity {
     private String selectedNoteColor;
     private final static int REQUEST_READ_MEDIA_IMAGES = 1;
     private String selectedImagePath = "";
+    private final Utils.Debounce debounce = new Utils.Debounce(2000);
 
     private final ActivityResultLauncher<Intent> selectImageActivity = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -260,9 +261,11 @@ public class CreateNoteActivity extends AppCompatActivity {
         String content = noteContent.getText().toString();
 
         if (title.isEmpty()) {
+            if (debounce.debounce()) return;
             showToast("Note title can't be empty");
             return;
         } else if (subtitle.isEmpty() && content.trim().isEmpty()) {
+            if (debounce.debounce()) return;
             showToast("Note subtitle can't be empty");
             return;
         }
@@ -441,10 +444,14 @@ public class CreateNoteActivity extends AppCompatActivity {
 
             addURLDialogView.findViewById(R.id.btnAdd).setOnClickListener(view -> {
                 String url = inputURL.getText().toString().trim();
-                if (url.isEmpty())
+                if (url.isEmpty()) {
+                    if (debounce.debounce()) return;
                     showToast("Enter your URL");
-                else if (!Patterns.WEB_URL.matcher(url).matches())
+                }
+                else if (!Patterns.WEB_URL.matcher(url).matches()) {
+                    if (debounce.debounce()) return;
                     showToast("Enter a valid URL");
+                }
                 else {
                     mainURL.setText(url);
                     layoutURL.setVisibility(View.VISIBLE);
