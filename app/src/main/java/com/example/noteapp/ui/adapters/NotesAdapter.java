@@ -31,7 +31,7 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
     private final NoteListener noteListener;
     private final List<NoteViewHolder> selectedNoteViewHolderList = new ArrayList<>();
     public boolean isSelectedAll = false;
-    public boolean isLongClickConsumed = false;
+    public boolean isSelectingNotes = false;
 
     private static final DiffUtil.ItemCallback<Note> diffCallback = new DiffUtil.ItemCallback<Note>() {
         @Override
@@ -84,13 +84,13 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
     public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
         holder.setNote(getItem(position));
 
-        if (MainActivity.isEventCheckbox || MainActivity.isCancelButtonClicked)
+        if (MainActivity.isEventCheckboxSelectAll || MainActivity.isBackButtonClicked)
             holder.setSelected(isSelectedAll);
 
         if (holder.isSelected) {
-            if (!isLongClickConsumed) holder.setSelected(false);
-            holder.checkbox.setVisibility(isLongClickConsumed ? View.VISIBLE : View.GONE);
-            if (isLongClickConsumed) {
+            if (!isSelectingNotes) holder.setSelected(false);
+            holder.checkbox.setVisibility(isSelectingNotes ? View.VISIBLE : View.GONE);
+            if (isSelectingNotes) {
                 if (!selectedNoteViewHolderList.contains(holder))
                     selectedNoteViewHolderList.add(holder);
             } else
@@ -101,9 +101,9 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
         }
 
         holder.noteContainer.setOnClickListener(view -> {
-            if (isLongClickConsumed) { // The long click event is consumed means the user is selecting/unselecting notes
-                MainActivity.isEventCheckbox = false;
-                ((CheckBox) MainActivity.getLayoutDeleteOptions().findViewById(R.id.checkbox)).setChecked(false);
+            if (isSelectingNotes) {
+                MainActivity.isEventCheckboxSelectAll = false;
+                ((CheckBox) MainActivity.getSelectInformation().findViewById(R.id.checkboxSelectAll)).setChecked(false);
                 holder.setSelected(!holder.isSelected);
                 notifyItemChanged(position, holder.isSelected);
                 MainActivity.setDeleteMessage();
@@ -111,8 +111,8 @@ public class NotesAdapter extends ListAdapter<Note, NotesAdapter.NoteViewHolder>
         });
 
         holder.noteContainer.setOnLongClickListener(view -> {
-            if (isLongClickConsumed) return true; // If the long click event was already consumed, omit it and do nothing
-            isLongClickConsumed = true; // true -> the user want to select multiple notes
+            if (isSelectingNotes) return true; // Select feature is enabled, omit it and do nothing
+            isSelectingNotes = true; // true -> the user want to select multiple notes
             noteListener.onNoteLongClicked(holder);
             notifyItemChanged(position, holder.isSelected);
             MainActivity.setDeleteMessage();

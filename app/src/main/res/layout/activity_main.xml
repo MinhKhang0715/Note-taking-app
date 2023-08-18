@@ -56,6 +56,48 @@
         
     </LinearLayout>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/selectInformation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/layoutSearch"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:visibility="gone"
+        android:background="@color/defaultBackgroundColor">
+        <CheckBox
+            android:id="@+id/checkboxSelectAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_8sdp"
+            app:buttonTint="@color/white"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+        <TextView
+            android:id="@+id/numberOfSelectedNotes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@id/checkboxSelectAll"
+            app:layout_constraintTop_toTopOf="@id/checkboxSelectAll"
+            app:layout_constraintBottom_toBottomOf="@id/checkboxSelectAll"
+            android:textSize="@dimen/_11ssp"
+            android:text="@string/selected_notes"
+            android:textColor="@color/white"/>
+        <Button
+            android:id="@+id/btnDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/_8sdp"
+            android:padding="@dimen/_8sdp"
+            android:includeFontPadding="false"
+            android:text="@string/delete"
+            android:textSize="@dimen/_11ssp"
+            android:textColor="@color/colorAccent"
+            android:backgroundTint="@color/background_button"
+            app:layout_constraintTop_toTopOf="@+id/numberOfSelectedNotes"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/numberOfSelectedNotes"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/noteRecyclerView"
         android:layout_width="match_parent"
@@ -66,7 +108,7 @@
         android:paddingStart="0dp"
         android:paddingEnd="@dimen/_12sdp"
         app:layout_constraintBottom_toTopOf="@id/quickActions"
-        app:layout_constraintTop_toBottomOf="@id/layoutSearch"/>
+        app:layout_constraintTop_toBottomOf="@id/selectInformation"/>
 
     <LinearLayout
         android:id="@+id/quickActions"
@@ -119,7 +161,5 @@
         app:layout_constraintTop_toTopOf="@id/quickActions"
         app:layout_constraintBottom_toTopOf="@id/quickActions"
         app:layout_constraintEnd_toEndOf="parent"/>
-
-    <include layout="@layout/delete_options"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
