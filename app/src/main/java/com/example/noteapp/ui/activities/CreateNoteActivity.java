@@ -88,7 +88,7 @@ public class CreateNoteActivity extends AppCompatActivity {
                                 findViewById(R.id.removeImage).setVisibility(View.VISIBLE);
                                 selectedImagePath = Utils.getPathFromUri(selectedImageUri, getContentResolver());
                             } catch (Exception e) {
-                                showToast(e.getMessage());
+                                showToast(R.string.uri_error);
                             }
                         }
                     }
@@ -262,11 +262,11 @@ public class CreateNoteActivity extends AppCompatActivity {
 
         if (title.isEmpty()) {
             if (debounce.debounce()) return;
-            showToast("Note title can't be empty");
+            showToast(R.string.note_title_cannot_be_empty);
             return;
         } else if (subtitle.isEmpty() && content.trim().isEmpty()) {
             if (debounce.debounce()) return;
-            showToast("Note subtitle can't be empty");
+            showToast(R.string.note_subtitle_cannot_be_empty);
             return;
         }
 
@@ -446,11 +446,11 @@ public class CreateNoteActivity extends AppCompatActivity {
                 String url = inputURL.getText().toString().trim();
                 if (url.isEmpty()) {
                     if (debounce.debounce()) return;
-                    showToast("Enter your URL");
+                    showToast(R.string.enter_an_url);
                 }
                 else if (!Patterns.WEB_URL.matcher(url).matches()) {
                     if (debounce.debounce()) return;
-                    showToast("Enter a valid URL");
+                    showToast(R.string.enter_an_valid_url);
                 }
                 else {
                     mainURL.setText(url);
@@ -493,8 +493,8 @@ public class CreateNoteActivity extends AppCompatActivity {
         gradientDrawable.setColor(Color.parseColor(selectedNoteColor));
     }
 
-    private void showToast(String message) {
-        Toast.makeText(CreateNoteActivity.this, message, Toast.LENGTH_SHORT).show();
+    private void showToast(int resourceID) {
+        Toast.makeText(CreateNoteActivity.this, resourceID, Toast.LENGTH_SHORT).show();
     }
 
 
@@ -547,7 +547,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         if (requestCode == REQUEST_READ_MEDIA_IMAGES && grantResults.length > 0) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 selectImage();
-            else showToast("Permission denied");
+            else showToast(R.string.permission_denied);
         }
     }
 

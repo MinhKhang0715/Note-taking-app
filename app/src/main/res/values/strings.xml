@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">NoteApp</string>
     <string name="search_notes">Search notes</string>
-    <string name="my_notes">My Notes</string>
+    <string name="my_notes" translatable="false">My Notes</string>
     <string name="note_title">Note title</string>
     <string name="note_subtitle">Note subtitle</string>
     <string name="type_your_note">Type your note…</string>
@@ -23,4 +23,21 @@
     <string name="strikethrough_icon">Strikethrough icon</string>
     <string name="save_button">Save button</string>
     <string name="selected_notes">%1$d selected</string>
+    <string name="ask_delete_multiple_note">Are you sure you want to delete %1$d %2$s</string>
+    <string name="note_singular"> note</string>
+    <string name="note_plural"> notes</string>
+    <string name="created_note">Created note</string>
+    <string name="updated_note">Updated note</string>
+    <string name="deleted_note">Deleted note</string>
+    <string name="permission_denied">Permission denied</string>
+    <string name="no_note_selected">No note selected</string>
+    <string name="enter_an_url">Enter an URL</string>
+    <string name="enter_an_valid_url">Enter an valid URL</string>
+    <string name="note_title_cannot_be_empty">Note title can\'t be empty</string>
+    <string name="note_subtitle_cannot_be_empty">Note subtitle can\'t be empty</string>
+    <string name="uri_error">An error occurred when reading the URI</string>
+    <plurals name="note_quantity">
+        <item quantity="one"> note</item>
+        <item quantity="other"> notes</item>
+    </plurals>
 </resources>
