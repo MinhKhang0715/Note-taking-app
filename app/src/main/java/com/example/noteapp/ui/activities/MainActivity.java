@@ -2,6 +2,7 @@ package com.example.noteapp.ui.activities;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
@@ -18,6 +19,7 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,10 +51,13 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
     private final static int REQUEST_READ_IMAGES_CODE = 4;
     private static NotesAdapter notesAdapter;
     private AlertDialog addURLDialog;
-    private static ConstraintLayout layoutDeleteOptions;
+    private static ConstraintLayout selectInformation;
+    private LinearLayout quickActionLayout;
+    private ImageView mainAddNoteBtn;
     private int noteClickedPosition;
     private NoteViewModel noteViewModel;
     private static int numberOfSelectedNotes;
+    private final Utils.Debounce debounce = new Utils.Debounce(2000);
 
     private ActivityResultLauncher<Intent> createNoteActivity;
     private ActivityResultLauncher<Intent> selectImageActivity;
@@ -62,20 +67,15 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
      * When the user click on the checkbox, it means that they want to select/unselect all notes<br>
      * If this flag is set to false it means the user is manually selecting notes
      */
-    public static boolean isEventCheckbox = false;
+    public static boolean isEventCheckboxSelectAll = false;
 
-    /**
-     * The cancel button in the <code>delete_options.xml</code> layout<br>
-     * When the user click on it, unselect all the notes and hide the layout
-     */
-    public static boolean isCancelButtonClicked = false;
-    public static boolean isInsertNote = false;
+    public static boolean isBackButtonClicked = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ImageView addNoteBtn = findViewById(R.id.imgAddNoteMain);
+        mainAddNoteBtn = findViewById(R.id.imgAddNoteMain);
 
         RecyclerView notesView = findViewById(R.id.noteRecyclerView);
         notesView.setLayoutManager(
@@ -91,11 +91,12 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         });
 
         registerActivities();
+        quickActionLayout = findViewById(R.id.quickActions);
 
-        addNoteBtn.setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
-        findViewById(R.id.imgAddNote).setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
+        mainAddNoteBtn.setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
+        quickActionLayout.findViewById(R.id.imgAddNote).setOnClickListener(view -> createNoteActivity.launch(new Intent(this, CreateNoteActivity.class)));
 
-        findViewById(R.id.imgAddImage).setOnClickListener(view -> {
+        quickActionLayout.findViewById(R.id.imgAddImage).setOnClickListener(view -> {
             if (ContextCompat.checkSelfPermission(
                     getApplicationContext(),
                     Manifest.permission.READ_MEDIA_IMAGES
@@ -110,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
             }
         });
 
-        findViewById(R.id.imgAddWebLink).setOnClickListener(view -> showAddURLDialog());
+        quickActionLayout.findViewById(R.id.imgAddWebLink).setOnClickListener(view -> showAddURLDialog());
 
         EditText inputSearch = findViewById(R.id.inputSearch);
         inputSearch.addTextChangedListener(new TextWatcher() {
@@ -127,22 +128,18 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
             }
         });
 
-        layoutDeleteOptions = findViewById(R.id.layoutDeleteOptions);
-        layoutDeleteOptions.findViewById(R.id.btnCancelDelete).setOnClickListener(view -> {
-            isCancelButtonClicked = true;
-            isEventCheckbox = false;
-            notesAdapter.unselectAll();
-            ((CheckBox) layoutDeleteOptions.findViewById(R.id.checkbox)).setChecked(false);
-            notesAdapter.isLongClickConsumed = false;
-            layoutDeleteOptions.setVisibility(View.GONE);
-        });
-        layoutDeleteOptions.findViewById(R.id.btnDelete).setOnClickListener(view -> {
-            if (numberOfSelectedNotes == 0) return;
+        selectInformation = findViewById(R.id.selectInformation);
+        selectInformation.findViewById(R.id.btnDelete).setOnClickListener(view -> {
+            if (numberOfSelectedNotes == 0) {
+                if (debounce.debounce()) return;
+                showToast("No note selected");
+                return;
+            }
             showDeleteNotesDialog();
         });
-        CheckBox checkBox = layoutDeleteOptions.findViewById(R.id.checkbox);
+        CheckBox checkBox = selectInformation.findViewById(R.id.checkboxSelectAll);
         checkBox.setOnClickListener(view -> {
-            isEventCheckbox = true;
+            isEventCheckboxSelectAll = true;
             if (checkBox.isChecked()) {
                 notesAdapter.setSelectAll();
                 checkBox.setChecked(true);
@@ -154,7 +151,22 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
     }
 
     @Override
+    public void onBackPressed() {
+        if (notesAdapter.isSelectingNotes) {
+            isBackButtonClicked = true;
+            isEventCheckboxSelectAll = false;
+            notesAdapter.isSelectingNotes = false;
+            notesAdapter.unselectAll();
+            ((CheckBox) selectInformation.findViewById(R.id.checkboxSelectAll)).setChecked(false);
+            selectInformation.setVisibility(View.GONE);
+            quickActionLayout.setVisibility(View.VISIBLE);
+            mainAddNoteBtn.setVisibility(View.VISIBLE);
+        } else super.onBackPressed();
+    }
+
+    @Override
     public void onNoteClicked(Note note, int position) {
+        if (isBackButtonClicked) isBackButtonClicked = false;
         noteClickedPosition = position;
         viewOrUpdateNoteActivity.launch(
                 new Intent(getApplicationContext(), CreateNoteActivity.class)
@@ -165,10 +177,12 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
 
     @Override
     public void onNoteLongClicked(NotesAdapter.NoteViewHolder noteViewHolder) {
-        if (isCancelButtonClicked) isCancelButtonClicked = false;
+        if (isBackButtonClicked) isBackButtonClicked = false;
         noteViewHolder.setSelected(true);
 
-        layoutDeleteOptions.setVisibility(View.VISIBLE);
+        selectInformation.setVisibility(View.VISIBLE);
+        quickActionLayout.setVisibility(View.GONE);
+        mainAddNoteBtn.setVisibility(View.GONE);
     }
 
     @Override
@@ -181,29 +195,22 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         }
     }
 
-    public static ConstraintLayout getLayoutDeleteOptions() {
-        return layoutDeleteOptions;
+    public static ConstraintLayout getSelectInformation() {
+        return selectInformation;
     }
 
     /**
-     * Using an executor to run the code after the adapter updated its number of selected notes
+     * Using an executor to run the code after the adapter has updated its number of selected notes
      * (via {@code selectedNoteViewHolderList})<br>
-     * The <b>delay time</b> is set to make sure the code will run <i>after</i>
-     * the number of selected notes is updated.
+     * The <b>delay time</b> is set to 20 milliseconds to ensure the code will run <i>after</i>
+     * the number of selected notes has been updated.
      */
-    @SuppressLint("SetTextI18n")
     public static void setDeleteMessage() {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
-        executorService.execute(() -> handler.postDelayed(() -> {
-            numberOfSelectedNotes = notesAdapter.getSelectedNoteViewHolderList().size();
-            ((TextView) layoutDeleteOptions.findViewById(R.id.deleteMessage)).setText("You will delete " +
-                    (numberOfSelectedNotes > 1 ?
-                            (numberOfSelectedNotes + " notes") :
-                            (numberOfSelectedNotes + " note")
-                    )
-            );
-        }, 20));
+        Context applicationContext = selectInformation.getContext().getApplicationContext();
+        UpdateSelectedNotesTask updateSelectedNotesTask = new UpdateSelectedNotesTask(applicationContext);
+        executorService.execute(() -> handler.postDelayed(updateSelectedNotesTask, 20));
     }
 
     private void registerActivities() {
@@ -215,7 +222,6 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                         if (data != null) {
                             Note noteToSave = (Note) data.getSerializableExtra("note");
                             noteViewModel.insert(noteToSave);
-                            isInsertNote = true;
                             showToast("Created note");
                         }
                     }
@@ -330,11 +336,15 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                 noteViewModel.deleteByIds(noteIds);
             }
             numberOfSelectedNotes = 0;
-            notesAdapter.isLongClickConsumed = false;
-            ((CheckBox) layoutDeleteOptions.findViewById(R.id.checkbox)).setChecked(false);
-            isEventCheckbox = false;
+            notesAdapter.isSelectingNotes = false;
+            if (notesAdapter.getSelectedNoteViewHolderList().size() > 0)
+                notesAdapter.getSelectedNoteViewHolderList().clear();
+            ((CheckBox) selectInformation.findViewById(R.id.checkboxSelectAll)).setChecked(false);
+            isEventCheckboxSelectAll = false;
             deleteNoteDialog.dismiss();
-            layoutDeleteOptions.setVisibility(View.GONE);
+            selectInformation.setVisibility(View.GONE);
+            quickActionLayout.setVisibility(View.VISIBLE);
+            mainAddNoteBtn.setVisibility(View.VISIBLE);
         });
         deleteNoteDialogView.findViewById(R.id.btnCancel).setOnClickListener(view -> deleteNoteDialog.dismiss());
         deleteNoteDialog.show();
@@ -342,5 +352,20 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
 
     private void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private static final class UpdateSelectedNotesTask implements Runnable {
+        private final Context context;
+
+        private UpdateSelectedNotesTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        public void run() {
+            int numberOfSelectedNotes = notesAdapter.getSelectedNoteViewHolderList().size();
+            String message = context.getString(R.string.selected_notes, numberOfSelectedNotes);
+            ((TextView) selectInformation.findViewById(R.id.numberOfSelectedNotes)).setText(message);
+        }
     }
 }
