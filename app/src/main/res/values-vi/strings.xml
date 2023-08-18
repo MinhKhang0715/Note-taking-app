@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">NoteApp</string>
+    <string name="search_notes">Tìm kiếm ghi chú</string>
+    <string name="note_title">Tiêu đề</string>
+    <string name="note_subtitle">Mô tả</string>
+    <string name="type_your_note">Nhập nội dung…</string>
+    <string name="note_options">Các lựa chọn</string>
+    <string name="pick_color">Chọn màu</string>
+    <string name="add_an_image">Thêm hình</string>
+    <string name="add_an_url_for_main_reference">Thêm một đường dẫn chính (nếu có)</string>
+    <string name="add_url">Thêm đường dẫn</string>
+    <string name="enter_your_url_here">Nhập URL ở đây</string>
+    <string name="add">THÊM</string>
+    <string name="cancel">Hủy</string>
+    <string name="delete_note">Xóa ghi chú</string>
+    <string name="are_you_sure_you_want_to_delete_this_note">Bản ghi chú này sẽ bị xóa, bạn chắc chứ?</string>
+    <string name="delete">XÓA</string>
+    <string name="delete_this_note">Xóa ghi chú</string>
+    <string name="bold_text_icon">Icon chữ in đậm</string>
+    <string name="italic_text_icon">Icon chữ nghiêng</string>
+    <string name="underline_icon">Icon gạch dưới chữ</string>
+    <string name="strikethrough_icon">Icon đường gạch ngang chữ</string>
+    <string name="save_button">Nút lưu</string>
+    <string name="selected_notes">%1$d bản ghi đã được chọn</string>
+    <string name="ask_delete_multiple_note">Bạn có chắc là bạn muốn xóa %1$d %2$s</string>
+    <string name="note_singular">ghi chú</string>
+    <string name="note_plural">ghi chú</string>
+    <string name="created_note">Đã tạo ghi chú</string>
+    <string name="updated_note">Đã cập nhật ghi chú</string>
+    <string name="deleted_note">Đã xóa ghi chú</string>
+    <string name="permission_denied">Quyền truy cập bị từ chối</string>
+    <string name="no_note_selected">Hãy chọn một ghi chú</string>
+    <string name="enter_an_url">Hãy nhập một đường dẫn</string>
+    <string name="enter_an_valid_url">Hãy nhập một đường dẫn hợp lệ</string>
+    <string name="note_title_cannot_be_empty">Tiêu đề không được để trống</string>
+    <string name="note_subtitle_cannot_be_empty">Mô tả không được để trống</string>
+    <string name="uri_error">Xảy ra lỗi khi đọc URI</string>
+    <plurals name="note_quantity" tools:ignore="UnusedQuantity">
+        <item quantity="one"> ghi chú</item>
+        <item quantity="other"> ghi chú</item>
+    </plurals>
+</resources>

@@ -1,7 +1,6 @@
 package com.example.noteapp.ui.activities;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -132,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         selectInformation.findViewById(R.id.btnDelete).setOnClickListener(view -> {
             if (numberOfSelectedNotes == 0) {
                 if (debounce.debounce()) return;
-                showToast("No note selected");
+                showToast(R.string.no_note_selected);
                 return;
             }
             showDeleteNotesDialog();
@@ -191,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         if (requestCode == REQUEST_READ_IMAGES_CODE && grantResults.length > 0) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 selectImageActivity.launch(new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI));
-            else showToast("Permission denied");
+            else showToast(R.string.permission_denied);
         }
     }
 
@@ -222,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                         if (data != null) {
                             Note noteToSave = (Note) data.getSerializableExtra("note");
                             noteViewModel.insert(noteToSave);
-                            showToast("Created note");
+                            showToast(R.string.created_note);
                         }
                     }
                 }
@@ -256,12 +255,12 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                                 Note noteToDelete = (Note) resultIntent.getSerializableExtra("noteToDelete");
                                 noteViewModel.delete(noteToDelete);
                                 notesAdapter.notifyItemRemoved(noteClickedPosition);
-                                showToast("Deleted note");
+                                showToast(R.string.deleted_note);
                             } else if (resultIntent.getBooleanExtra("isUpdateNote", false)) {
                                 Note noteToUpdate = (Note) resultIntent.getSerializableExtra("noteToUpdate");
                                 noteViewModel.insert(noteToUpdate);
                                 notesAdapter.notifyItemChanged(noteClickedPosition);
-                                showToast("Updated note");
+                                showToast(R.string.updated_note);
                             }
                         }
                     }
@@ -290,11 +289,11 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                 String url = inputURL.getText().toString().trim();
                 if (url.isEmpty()) {
                     if (debounce.debounce()) return;
-                    showToast("Enter your URL");
+                    showToast(R.string.enter_an_url);
                 }
                 else if (!Patterns.WEB_URL.matcher(url).matches()) {
                     if (debounce.debounce()) return;
-                    showToast("Enter a valid URL");
+                    showToast(R.string.enter_an_valid_url);
                 }
                 else {
                     addURLDialog.dismiss();
@@ -309,7 +308,6 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         addURLDialog.show();
     }
 
-    @SuppressLint("SetTextI18n")
     private void showDeleteNotesDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         View deleteNoteDialogView = LayoutInflater.from(this).inflate(
@@ -320,11 +318,14 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         AlertDialog deleteNoteDialog = builder.create();
         if (deleteNoteDialog.getWindow() != null)
             deleteNoteDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
-        ((TextView) deleteNoteDialogView.findViewById(R.id.message)).setText("Are you sure you want to delete " +
-                (numberOfSelectedNotes > 1 ?
-                        (numberOfSelectedNotes + " notes") :
-                        (numberOfSelectedNotes + " note")
+        String deleteConfirmationMessage = getString(
+                R.string.ask_delete_multiple_note,
+                numberOfSelectedNotes,
+                getResources().getQuantityString(
+                        R.plurals.note_quantity,
+                        numberOfSelectedNotes
                 ));
+        ((TextView) deleteNoteDialogView.findViewById(R.id.message)).setText(deleteConfirmationMessage);
         deleteNoteDialogView.findViewById(R.id.btnDelete).setOnClickListener(view -> {
             if (numberOfSelectedNotes == notesAdapter.getItemCount())
                 noteViewModel.deleteAllNotes();
@@ -350,8 +351,8 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
         deleteNoteDialog.show();
     }
 
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    private void showToast(int resourceId) {
+        Toast.makeText(this, resourceId, Toast.LENGTH_SHORT).show();
     }
 
     private static final class UpdateSelectedNotesTask implements Runnable {
@@ -363,7 +364,7 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
 
         @Override
         public void run() {
-            int numberOfSelectedNotes = notesAdapter.getSelectedNoteViewHolderList().size();
+            numberOfSelectedNotes = notesAdapter.getSelectedNoteViewHolderList().size();
             String message = context.getString(R.string.selected_notes, numberOfSelectedNotes);
             ((TextView) selectInformation.findViewById(R.id.numberOfSelectedNotes)).setText(message);
         }
