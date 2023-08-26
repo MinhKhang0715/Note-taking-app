@@ -40,6 +40,7 @@ import com.example.noteapp.helpers.Utils;
 import com.example.noteapp.listeners.NoteListener;
 import com.example.noteapp.ui.adapters.NotesAdapter;
 import com.example.noteapp.ui.viewmodels.NoteViewModel;
+import com.intuit.sdp.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -290,12 +291,10 @@ public class MainActivity extends AppCompatActivity implements NoteListener {
                 if (url.isEmpty()) {
                     if (debounce.debounce()) return;
                     showToast(R.string.enter_an_url);
-                }
-                else if (!Patterns.WEB_URL.matcher(url).matches()) {
+                } else if (!Patterns.WEB_URL.matcher(url).matches()) {
                     if (debounce.debounce()) return;
                     showToast(R.string.enter_an_valid_url);
-                }
-                else {
+                } else {
                     addURLDialog.dismiss();
                     createNoteActivity.launch(new Intent(MainActivity.this, CreateNoteActivity.class)
                             .putExtra("isQuickAction", true)
