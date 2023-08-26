@@ -10,7 +10,7 @@
 ### Features
 - Detects and formats web URLs automatically
 - Any change in the database will be automatically updated to the ui with [LiveData](https://developer.android.com/topic/libraries/architecture/livedata)
-- Styling: The content of each note can have *italic text*, **bold text**, <u>underlined text</u>, and ~~strikethrough~~
+- Styling: The content of each note can have *italic text*, **bold text**, <ins>underlined text</ins>, and ~~strikethrough~~
 - Each note can have one image attached to it
 ### Future plan
 - [] Complete search
