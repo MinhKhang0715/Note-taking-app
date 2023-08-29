@@ -3,7 +3,7 @@
 
 ### Tecnologies
 - **Database**: [Room Database v2.5.2](https://developer.android.com/training/data-storage/room)
-- **Dydamic list with** [RecyclerView](https://developer.android.com/develop/ui/views/layout/recyclerview)
+- **Dynamic list with** [RecyclerView](https://developer.android.com/develop/ui/views/layout/recyclerview)
 ### Functionality
 - Basic CRUD
 - Search notes based on title, subtitle and content **(incomplete)**
